@@ -59,7 +59,7 @@
         }
 
         <!-- Quick Actions -->
-        <div class="grid md:grid-cols-2 gap-6 mb-8">
+        <div class="grid md:grid-cols-3 gap-6 mb-8">
             <z-card [zTitle]="'Nouvelle Session'" [zDescription]="'Créez une nouvelle session de jeu'">
                 <a routerLink="/sessions/create" z-button class="w-full">
                     <i class='bx bx-plus-circle mr-2'></i>
@@ -71,6 +71,13 @@
                 <a routerLink="/sessions" z-button zType="outline" class="w-full">
                     <i class='bx bx-group mr-2'></i>
                     Voir les Sessions
+                </a>
+            </z-card>
+
+            <z-card [zTitle]="'Classements'" [zDescription]="'Consultez les meilleurs scores'">
+                <a routerLink="/leaderboard" z-button zType="outline" class="w-full">
+                    <i class='bx bx-trophy mr-2'></i>
+                    Voir les Classements
                 </a>
             </z-card>
         </div>
