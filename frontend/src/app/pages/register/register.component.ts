@@ -7,6 +7,7 @@ import { ZardButtonComponent } from '../../shared/components/button/button.compo
 import { ZardCardComponent } from '../../shared/components/card/card.component';
 import { ZardInputDirective } from '../../shared/components/input/input.directive';
 import { ZardFormLabelComponent } from '../../shared/components/form/form.component';
+import { ThemeToggleComponent } from '../../core/components/theme-toggle/theme-toggle.component';
 
 @Component({
   selector: 'app-register',
@@ -19,6 +20,7 @@ import { ZardFormLabelComponent } from '../../shared/components/form/form.compon
     ZardCardComponent,
     ZardInputDirective,
     ZardFormLabelComponent,
+    ThemeToggleComponent,
   ],
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.css'],
