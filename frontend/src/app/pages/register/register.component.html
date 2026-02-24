@@ -1,0 +1,116 @@
+<div class="min-h-screen flex items-center justify-center bg-muted/50 p-4">
+    <div class="w-full max-w-md">
+        <!-- Logo & Title -->
+        <div class="text-center mb-8">
+            <div class="flex items-center justify-center gap-3 mb-4">
+                <img src="/assets/logo.svg" alt="Logo" class="w-12 h-12" />
+                <span class="text-2xl font-bold bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">
+                    Pi & Rho's Games
+                </span>
+            </div>
+        </div>
+
+        <!-- Register Card -->
+        <z-card [zTitle]="'Créer un compte'" [zDescription]="'Rejoignez la communauté et commencez à jouer'">
+            <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-4">
+                <!-- Error Message -->
+                @if (error) {
+                <div class="bg-destructive/10 text-destructive text-sm p-3 rounded-md border border-destructive/20">
+                    {{ error }}
+                </div>
+                }
+
+                <!-- Email Field -->
+                <div class="space-y-2">
+                    <label z-form-label for="email">Email</label>
+                    <input z-input id="email" type="email" formControlName="email" placeholder="nom@exemple.com"
+                        [class.border-destructive]="email?.invalid && email?.touched" />
+                    @if (email?.invalid && email?.touched) {
+                    <p class="text-sm text-destructive">
+                        @if (email?.errors?.['required']) {
+                        L'email est requis
+                        }
+                        @if (email?.errors?.['email']) {
+                        L'email n'est pas valide
+                        }
+                    </p>
+                    }
+                </div>
+
+                <!-- Username Field -->
+                <div class="space-y-2">
+                    <label z-form-label for="username">Nom d'utilisateur</label>
+                    <input z-input id="username" type="text" formControlName="username" placeholder="johndoe"
+                        [class.border-destructive]="username?.invalid && username?.touched" />
+                    @if (username?.invalid && username?.touched) {
+                    <p class="text-sm text-destructive">
+                        @if (username?.errors?.['required']) {
+                        Le nom d'utilisateur est requis
+                        }
+                        @if (username?.errors?.['minlength']) {
+                        Le nom doit contenir au moins 3 caractères
+                        }
+                        @if (username?.errors?.['maxlength']) {
+                        Le nom ne peut dépasser 30 caractères
+                        }
+                    </p>
+                    }
+                </div>
+
+                <!-- Password Field -->
+                <div class="space-y-2">
+                    <label z-form-label for="password">Mot de passe</label>
+                    <input z-input id="password" type="password" formControlName="password" placeholder="••••••••"
+                        [class.border-destructive]="password?.invalid && password?.touched" />
+                    @if (password?.invalid && password?.touched) {
+                    <p class="text-sm text-destructive">
+                        @if (password?.errors?.['required']) {
+                        Le mot de passe est requis
+                        }
+                        @if (password?.errors?.['minlength']) {
+                        Le mot de passe doit contenir au moins 6 caractères
+                        }
+                    </p>
+                    }
+                </div>
+
+                <!-- Confirm Password Field -->
+                <div class="space-y-2">
+                    <label z-form-label for="confirmPassword">Confirmer le mot de passe</label>
+                    <input z-input id="confirmPassword" type="password" formControlName="confirmPassword"
+                        placeholder="••••••••"
+                        [class.border-destructive]="confirmPassword?.invalid && confirmPassword?.touched" />
+                    @if (confirmPassword?.invalid && confirmPassword?.touched) {
+                    <p class="text-sm text-destructive">
+                        @if (confirmPassword?.errors?.['required']) {
+                        Veuillez confirmer votre mot de passe
+                        }
+                        @if (confirmPassword?.errors?.['passwordMismatch']) {
+                        Les mots de passe ne correspondent pas
+                        }
+                    </p>
+                    }
+                </div>
+
+                <!-- Submit Button -->
+                <button z-button type="submit" class="w-full" [zDisabled]="loading || registerForm.invalid" [zLoading]="loading">
+                    {{ loading ? 'Création du compte...' : 'Créer mon compte' }}
+                </button>
+            </form>
+
+            <p card-footer class="text-sm text-center text-muted-foreground">
+                Vous avez déjà un compte ?
+                <a routerLink="/login" class="text-primary hover:underline font-medium">
+                    Se connecter
+                </a>
+            </p>
+        </z-card>
+
+        <!-- Back to Home -->
+        <div class="text-center mt-6">
+            <a routerLink="/" class="text-sm text-muted-foreground hover:text-foreground">
+                ← Retour à l'accueil
+            </a>
+        </div>
+    </div>
+</div>
