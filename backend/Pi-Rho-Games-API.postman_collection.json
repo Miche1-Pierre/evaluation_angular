@@ -886,6 +886,124 @@
                     }
                 }
             ]
+        },
+        {
+            "name": "🎮 Game",
+            "description": "Gameplay - Réponses, scoring et classements",
+            "item": [
+                {
+                    "name": "Get Session Products (without prices)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/sessions/{{sessionId}}/products",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "sessions", "{{sessionId}}", "products"]
+                        },
+                        "description": "Récupère les 4 produits de la session SANS montrer les prix. Accessible uniquement aux participants."
+                    }
+                },
+                {
+                    "name": "Submit Answer",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    const response = pm.response.json();",
+                                    "    console.log('Score:', response.score);",
+                                    "    console.log('Actual Price:', response.actual_price);",
+                                    "    console.log('Session Score:', response.session_score);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "POST",
+                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"product_id\": 1,\n  \"guessed_price\": 25.50\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/sessions/{{sessionId}}/answer",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "sessions", "{{sessionId}}", "answer"]
+                        },
+                        "description": "Soumet une estimation de prix. Calcule automatiquement le score: 100 - |prix_estimé - prix_réel|. Met à jour le score du participant."
+                    }
+                },
+                {
+                    "name": "Get Session Leaderboard",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/sessions/{{sessionId}}/leaderboard",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "sessions", "{{sessionId}}", "leaderboard"]
+                        },
+                        "description": "Classement de tous les participants de la session, triés par score décroissant."
+                    }
+                },
+                {
+                    "name": "Get Global Leaderboard",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/leaderboard/global?limit=50",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "leaderboard", "global"],
+                            "query": [
+                                {
+                                    "key": "limit",
+                                    "value": "50",
+                                    "description": "Nombre de résultats (défaut: 50, max: 100)"
+                                }
+                            ]
+                        },
+                        "description": "Classement global de tous les joueurs, basé sur le score total cumulé."
+                    }
+                },
+                {
+                    "name": "Get Friends Leaderboard",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/leaderboard/friends",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "leaderboard", "friends"]
+                        },
+                        "description": "Classement filtré aux amis de l'utilisateur connecté + lui-même."
+                    }
+                }
+            ]
         }
     ],
     "variable": [
