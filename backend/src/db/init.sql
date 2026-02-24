@@ -163,11 +163,11 @@ INSERT INTO products (name, price, image_url) VALUES
 
 -- ============================================
 -- Sessions de test
--- ===========================================, difficulty) VALUES
+-- ============================================
+INSERT INTO sessions (name, creator_id, status, difficulty) VALUES
   ('DFS 25-26', 1, 'active', 'medium'),
   ('Session Winter 2026', 1, 'completed', 'hard'),
-  ('Best of Tech', 1, 'active', 'easy'completed'),
-  ('Best of Tech', 1, 'active');
+  ('Best of Tech', 1, 'active', 'easy');
 
 -- Sélectionner 4 produits pour chaque session
 -- Session 1: iPhone, PS5, Sony Headphones, Kindle
