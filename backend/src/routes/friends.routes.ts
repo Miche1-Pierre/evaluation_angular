@@ -6,6 +6,56 @@ import { authMiddleware } from "../middleware/auth.middleware";
 const router = Router();
 
 /**
+ * Helper function to find receiver by email, username, or id
+ */
+async function findReceiver(
+  receiver_email?: string,
+  receiver_username?: string,
+  receiver_id?: number,
+) {
+  let receiverQuery = "SELECT id, username, email FROM users WHERE ";
+  const params: any[] = [];
+
+  if (receiver_id) {
+    receiverQuery += "id = $1";
+    params.push(receiver_id);
+  } else if (receiver_email) {
+    receiverQuery += "email = $1";
+    params.push(receiver_email);
+  } else {
+    receiverQuery += "username = $1";
+    params.push(receiver_username);
+  }
+
+  const receiverResult = await pool.query(receiverQuery, params);
+  return receiverResult.rows.length > 0 ? receiverResult.rows[0] : null;
+}
+
+/**
+ * Helper function to check if users are already friends
+ */
+async function areAlreadyFriends(user1: number, user2: number) {
+  const friendshipCheck = await pool.query(
+    `SELECT id FROM friendships 
+     WHERE (user_id_1 = $1 AND user_id_2 = $2) OR (user_id_1 = $2 AND user_id_2 = $1)`,
+    [Math.min(user1, user2), Math.max(user1, user2)],
+  );
+  return friendshipCheck.rows.length > 0;
+}
+
+/**
+ * Helper function to check existing friend request
+ */
+async function getExistingRequest(senderId: number, receiverId: number) {
+  const existingRequest = await pool.query(
+    `SELECT id, status, sender_id FROM friend_requests 
+     WHERE (sender_id = $1 AND receiver_id = $2) OR (sender_id = $2 AND receiver_id = $1)`,
+    [senderId, receiverId],
+  );
+  return existingRequest.rows.length > 0 ? existingRequest.rows[0] : null;
+}
+
+/**
  * GET /api/friends
  * Liste des amis de l'utilisateur connecté
  */
@@ -44,143 +94,6 @@ router.get(
  * Envoyer une demande d'amitié
  * Body: { receiver_email } ou { receiver_username } ou { receiver_id }
  */
-router.post(
-  "/request",
-  authMiddleware,
-  async (req: AuthRequest, res: Response): Promise<void> => {
-    try {
-      const senderId = req.user!.id;
-      const { receiver_email, receiver_username, receiver_id } = req.body;
-
-      // Au moins un identifiant requis
-      if (!receiver_email && !receiver_username && !receiver_id) {
-        res.status(400).json({
-          error: "Email, nom d'utilisateur ou ID du destinataire requis",
-        });
-        return;
-      }
-
-      // Trouver l'utilisateur destinataire
-      let receiverQuery = "SELECT id, username, email FROM users WHERE ";
-      const params: any[] = [];
-
-      if (receiver_id) {
-        receiverQuery += "id = $1";
-        params.push(receiver_id);
-      } else if (receiver_email) {
-        receiverQuery += "email = $1";
-        params.push(receiver_email);
-      } else {
-        receiverQuery += "username = $1";
-        params.push(receiver_username);
-      }
-
-      const receiverResult = await pool.query(receiverQuery, params);
-
-      if (receiverResult.rows.length === 0) {
-        res.status(404).json({ error: "Utilisateur non trouvé" });
-        return;
-      }
-
-      const receiverId = receiverResult.rows[0].id;
-
-      // Impossible de s'ajouter soi-même
-      if (senderId === receiverId) {
-        res
-          .status(400)
-          .json({ error: "Vous ne pouvez pas vous ajouter vous-même" });
-        return;
-      }
-
-      // Vérifier si déjà amis
-      const friendshipCheck = await pool.query(
-        `SELECT id FROM friendships 
-         WHERE (user_id_1 = $1 AND user_id_2 = $2) OR (user_id_1 = $2 AND user_id_2 = $1)`,
-        [Math.min(senderId, receiverId), Math.max(senderId, receiverId)],
-      );
-
-      if (friendshipCheck.rows.length > 0) {
-        res.status(400).json({ error: "Vous êtes déjà amis" });
-        return;
-      }
-
-      // Vérifier si une demande existe déjà
-      const existingRequest = await pool.query(
-        `SELECT id, status, sender_id FROM friend_requests 
-         WHERE (sender_id = $1 AND receiver_id = $2) OR (sender_id = $2 AND receiver_id = $1)`,
-        [senderId, receiverId],
-      );
-
-      if (existingRequest.rows.length > 0) {
-        const request = existingRequest.rows[0];
-
-        if (request.status === "pending") {
-          // Si c'est l'autre qui a envoyé une demande pending, on peut l'accepter directement
-          if (request.sender_id === receiverId) {
-            // Accepter automatiquement la demande inverse
-            await pool.query("BEGIN");
-
-            await pool.query(
-              `UPDATE friend_requests SET status = 'accepted', updated_at = CURRENT_TIMESTAMP
-               WHERE id = $1`,
-              [request.id],
-            );
-
-            await pool.query(
-              `INSERT INTO friendships (user_id_1, user_id_2)
-               VALUES ($1, $2)`,
-              [Math.min(senderId, receiverId), Math.max(senderId, receiverId)],
-            );
-
-            await pool.query("COMMIT");
-
-            res.json({
-              message:
-                "Demande acceptée automatiquement (l'autre utilisateur vous avait déjà envoyé une demande)",
-              friendship_created: true,
-            });
-            return;
-          } else {
-            res.status(400).json({
-              error: "Vous avez déjà envoyé une demande à cet utilisateur",
-            });
-            return;
-          }
-        } else if (request.status === "rejected") {
-          // Si la demande a été rejetée, on peut réessayer
-          await pool.query(
-            `UPDATE friend_requests SET status = 'pending', updated_at = CURRENT_TIMESTAMP
-             WHERE id = $1`,
-            [request.id],
-          );
-
-          res.json({
-            message: "Demande d'amitié renvoyée",
-            request_id: request.id,
-          });
-          return;
-        }
-      }
-
-      // Créer une nouvelle demande
-      const requestResult = await pool.query(
-        `INSERT INTO friend_requests (sender_id, receiver_id, status)
-         VALUES ($1, $2, 'pending')
-         RETURNING id, sender_id, receiver_id, status, created_at`,
-        [senderId, receiverId],
-      );
-
-      res.status(201).json({
-        message: "Demande d'amitié envoyée",
-        request: requestResult.rows[0],
-        receiver: receiverResult.rows[0],
-      });
-    } catch (error) {
-      console.error("Error sending friend request:", error);
-      res.status(500).json({ error: "Erreur lors de l'envoi de la demande" });
-    }
-  },
-);
 
 /**
  * GET /api/friends/requests

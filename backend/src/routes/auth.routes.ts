@@ -12,7 +12,6 @@ import {
   RegisterDTO,
   LoginDTO,
   AuthResponse,
-  User,
   UserPayload,
 } from "../types/auth.types";
 
@@ -28,9 +27,9 @@ router.post("/register", async (req: Request, res: Response): Promise<void> => {
 
     // Validation des champs
     if (!email || !username || !password) {
-      res
-        .status(400)
-        .json({ error: "Email, nom d'utilisateur et mot de passe sont requis" });
+      res.status(400).json({
+        error: "Email, nom d'utilisateur et mot de passe sont requis",
+      });
       return;
     }
 
@@ -51,7 +50,9 @@ router.post("/register", async (req: Request, res: Response): Promise<void> => {
 
     // Validation du mot de passe
     if (!isValidPassword(password)) {
-      res.status(400).json({ error: "Le mot de passe doit contenir au moins 8 caractères" });
+      res
+        .status(400)
+        .json({ error: "Le mot de passe doit contenir au moins 8 caractères" });
       return;
     }
 
@@ -190,9 +191,8 @@ router.post("/login", async (req: Request, res: Response): Promise<void> => {
  * GET /api/auth/me
  * Récupérer les infos de l'utilisateur connecté
  */
-router.get("/me", async (req: Request, res: Response): Promise<void> => {
+router.get("/me", async (res: Response): Promise<void> => {
   try {
-    // TODO: Ajouter le middleware d'authentification pour cette route
     res.status(501).json({ error: "Not implemented yet" });
   } catch (error) {
     console.error("Error in /me:", error);

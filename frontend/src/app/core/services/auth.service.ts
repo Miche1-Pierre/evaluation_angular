@@ -47,7 +47,7 @@ export class AuthService {
 
   constructor() {
     // Check if user is already logged in from stored token
-    if (typeof window !== 'undefined') {
+    if (globalThis.window !== undefined) {
       const token = this.getToken();
       if (token) {
         // Token validation will be handled by the interceptor
@@ -75,7 +75,7 @@ export class AuthService {
   }
 
   logout(): void {
-    if (typeof window !== 'undefined') {
+    if (globalThis.window !== undefined) {
       localStorage.removeItem(this.TOKEN_KEY);
     }
     this.currentUserSubject.next(null);
@@ -83,14 +83,14 @@ export class AuthService {
   }
 
   getToken(): string | null {
-    if (typeof window === 'undefined') {
+    if (globalThis.window === undefined) {
       return null;
     }
     return localStorage.getItem(this.TOKEN_KEY);
   }
 
   setToken(token: string): void {
-    if (typeof window !== 'undefined') {
+    if (globalThis.window !== undefined) {
       localStorage.setItem(this.TOKEN_KEY, token);
     }
   }

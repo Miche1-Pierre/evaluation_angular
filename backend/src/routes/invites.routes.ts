@@ -276,7 +276,6 @@ router.delete(
 );
 
 export default router;
-    const client = await pool.connect();
 
     try {
       const { sessionId } = req.params;

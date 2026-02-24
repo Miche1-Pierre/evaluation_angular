@@ -1,6 +1,13 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  ReactiveFormsModule,
+  FormControl,
+  AbstractControl,
+} from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { ZardButtonComponent } from '../../shared/components/button/button.component';
@@ -38,20 +45,25 @@ export class RegisterComponent {
   error: string | null = null;
 
   constructor() {
-    this.registerForm = this.fb.group(
+    this.registerForm = new FormGroup(
       {
-        email: ['', [Validators.required, Validators.email]],
-        username: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(30)]],
-        password: ['', [Validators.required, Validators.minLength(8)]],
-        confirmPassword: ['', [Validators.required]],
+        email: new FormControl('', [Validators.required, Validators.email]),
+        username: new FormControl('', [
+          Validators.required,
+          Validators.minLength(3),
+          Validators.maxLength(30),
+        ]),
+        password: new FormControl('', [Validators.required, Validators.minLength(8)]),
+        confirmPassword: new FormControl('', [Validators.required]),
       },
       { validators: this.passwordMatchValidator },
     );
   }
 
-  passwordMatchValidator(form: FormGroup) {
-    const password = form.get('password');
-    const confirmPassword = form.get('confirmPassword');
+  passwordMatchValidator(control: AbstractControl) {
+    const formGroup = control as FormGroup;
+    const password = formGroup.get('password');
+    const confirmPassword = formGroup.get('confirmPassword');
 
     if (password && confirmPassword && password.value !== confirmPassword.value) {
       confirmPassword.setErrors({ passwordMismatch: true });
