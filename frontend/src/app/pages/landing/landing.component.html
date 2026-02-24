@@ -1,0 +1,108 @@
+<!-- Hero Section -->
+<div class="min-h-screen flex flex-col">
+  <!-- Header -->
+  <header class="container mx-auto px-4 py-6">
+    <nav class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <img src="/assets/logo.svg" alt="Logo" class="w-10 h-10" />
+        <span class="text-2xl font-bold bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">
+          Pi & Rho's Games
+        </span>
+      </div>
+      <div class="flex items-center gap-3">
+        <a routerLink="/login" z-button zType="ghost">Connexion</a>
+        <a routerLink="/register" z-button>Inscription</a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Hero Content -->
+  <main class="container mx-auto px-4 flex-1 flex flex-col items-center justify-center text-center">
+    <div class="max-w-4xl mx-auto space-y-8 py-20">
+      <div class="space-y-4">
+        <h1 class="text-5xl md:text-7xl font-bold tracking-tight">
+          Devinez les Prix,
+          <span class="bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">
+            Gagnez des Points
+          </span>
+        </h1>
+        <p class="text-xl text-muted-foreground max-w-2xl mx-auto">
+          Testez vos connaissances du marché dans un jeu captivant où précision rime avec victoire.
+          Affrontez vos amis et grimpez dans le classement !
+        </p>
+      </div>
+
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a routerLink="/register" z-button zSize="lg" class="text-lg px-8">
+          Commencer à Jouer
+        </a>
+        <a routerLink="/login" z-button zSize="lg" zType="outline" class="text-lg px-8">
+          Se Connecter
+        </a>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid grid-cols-3 gap-8 max-w-2xl mx-auto pt-12">
+        <div class="space-y-2">
+          <div class="text-4xl font-bold text-primary">1,234</div>
+          <div class="text-sm text-muted-foreground">Joueurs Actifs</div>
+        </div>
+        <div class="space-y-2">
+          <div class="text-4xl font-bold text-primary">5,678</div>
+          <div class="text-sm text-muted-foreground">Parties Jouées</div>
+        </div>
+        <div class="space-y-2">
+          <div class="text-4xl font-bold text-primary">890</div>
+          <div class="text-sm text-muted-foreground">Sessions Actives</div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Features Section -->
+<section class="bg-muted/50 py-24">
+  <div class="container mx-auto px-4">
+    <div class="text-center space-y-4 mb-16">
+      <h2 class="text-3xl md:text-5xl font-bold">Comment ça marche ?</h2>
+      <p class="text-xl text-muted-foreground max-w-2xl mx-auto">
+        Un concept simple, addictif et compétitif
+      </p>
+    </div>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+      @for (feature of features; track feature.title) {
+        <z-card 
+          [zTitle]="feature.title" 
+          [zDescription]="feature.description"
+          class="relative overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1">
+          <div class="text-4xl mb-4">{{ feature.icon }}</div>
+        </z-card>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-24">
+  <div class="container mx-auto px-4">
+    <z-card class="bg-linear-to-r from-primary to-secondary text-white">
+      <div class="text-center space-y-6 py-12">
+        <h2 class="text-4xl md:text-5xl font-bold">Prêt à Relever le Défi ?</h2>
+        <p class="text-xl opacity-90 max-w-2xl mx-auto">
+          Rejoignez des milliers de joueurs et prouvez que vous connaissez les prix mieux que quiconque
+        </p>
+        <a routerLink="/register" z-button zSize="lg" zType="outline" class="text-lg px-8">
+          Créer un Compte Gratuit
+        </a>
+      </div>
+    </z-card>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="border-t py-8">
+  <div class="container mx-auto px-4 text-center text-muted-foreground">
+    <p>&copy; 2026 Pi & Rho's Games. Tous droits réservés.</p>
+  </div>
+</footer>
