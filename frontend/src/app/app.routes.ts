@@ -26,6 +26,11 @@ export const routes: Routes = [
     canActivate: [authGuard, adminGuard]
   },
   {
+    path: 'sessions',
+    loadComponent: () => import('./pages/sessions/sessions-list.component').then(m => m.SessionsListComponent),
+    canActivate: [authGuard]
+  },
+  {
     path: '**',
     redirectTo: ''
   }

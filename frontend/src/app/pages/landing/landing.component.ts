@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { CommonModule } from '@angular/common';
 import { ZardButtonComponent } from '../../shared/components/button/button.component';
 import { ZardCardComponent } from '../../shared/components/card/card.component';
 import { ThemeToggleComponent } from '../../core/components/theme-toggle/theme-toggle.component';
@@ -8,7 +7,7 @@ import { ThemeToggleComponent } from '../../core/components/theme-toggle/theme-t
 @Component({
   selector: 'app-landing',
   standalone: true,
-  imports: [CommonModule, RouterLink, ZardButtonComponent, ZardCardComponent, ThemeToggleComponent],
+  imports: [RouterLink, ZardButtonComponent, ZardCardComponent, ThemeToggleComponent],
   templateUrl: './landing.component.html',
   styleUrls: ['./landing.component.css'],
 })

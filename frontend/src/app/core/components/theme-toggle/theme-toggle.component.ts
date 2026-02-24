@@ -1,12 +1,11 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { ThemeService } from '../../services/theme.service';
 import { ZardButtonComponent } from '../../../shared/components/button/button.component';
 
 @Component({
   selector: 'app-theme-toggle',
   standalone: true,
-  imports: [CommonModule, ZardButtonComponent],
+  imports: [ZardButtonComponent],
   template: `
     <button 
       z-button 

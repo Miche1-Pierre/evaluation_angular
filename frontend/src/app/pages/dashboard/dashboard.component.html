@@ -61,17 +61,17 @@
         <!-- Quick Actions -->
         <div class="grid md:grid-cols-2 gap-6 mb-8">
             <z-card [zTitle]="'Nouvelle Session'" [zDescription]="'Créez une nouvelle session de jeu'">
-                <button z-button class="w-full" [zDisabled]="true">
+                <a routerLink="/sessions/create" z-button class="w-full">
                     <i class='bx bx-plus-circle mr-2'></i>
-                    Créer une Session (Bientôt)
-                </button>
+                    Créer une Session
+                </a>
             </z-card>
 
             <z-card [zTitle]="'Rejoindre une Session'" [zDescription]="'Participez à une session existante'">
-                <button z-button zType="outline" class="w-full" disabled>
+                <a routerLink="/sessions" z-button zType="outline" class="w-full">
                     <i class='bx bx-group mr-2'></i>
-                    Voir les Sessions (Bientôt)
-                </button>
+                    Voir les Sessions
+                </a>
             </z-card>
         </div>
 
