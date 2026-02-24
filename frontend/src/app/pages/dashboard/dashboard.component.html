@@ -1,0 +1,76 @@
+<div class="min-h-screen bg-muted/50">
+    <!-- Header -->
+    <header class="bg-background border-b">
+        <div class="container mx-auto px-4 py-4">
+            <nav class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <img src="/assets/logo.svg" alt="Logo" class="w-10 h-10" />
+                    <span
+                        class="text-2xl font-bold bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">
+                        Pi & Rho's Games
+                    </span>
+                </div>
+
+                @if (currentUser) {
+                <div class="flex items-center gap-4">
+                    <span class="text-sm text-muted-foreground">
+                        Bienvenue, <span class="font-semibold text-foreground">{{ currentUser.username }}</span>
+                    </span>
+                    <button z-button zType="outline" (click)="logout()">
+                        Déconnexion
+                    </button>
+                </div>
+                }
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Welcome Section -->
+        <div class="mb-8">
+            <h1 class="text-4xl font-bold mb-2">Dashboard</h1>
+            <p class="text-muted-foreground">Suivez vos performances et rejoignez des sessions</p>
+        </div>
+
+        <!-- User Stats -->
+        @if (currentUser) {
+        <div class="grid md:grid-cols-4 gap-6 mb-8">
+            <z-card [zTitle]="currentUser.total_score.toString()" [zDescription]="'Score Total'">
+            </z-card>
+
+            <z-card [zTitle]="currentUser.games_played.toString()" [zDescription]="'Parties Jouées'">
+            </z-card>
+
+            <z-card [zTitle]="currentUser.best_session_score ? currentUser.best_session_score.toString() : '-'" [zDescription]="'Meilleur Score'">
+            </z-card>
+
+            <z-card [zTitle]="(currentUser.average_score ? (currentUser.average_score | number:'1.0-0') : '-') || '-'" [zDescription]="'Score Moyen'">
+            </z-card>
+        </div>
+        }
+
+        <!-- Quick Actions -->
+        <div class="grid md:grid-cols-2 gap-6 mb-8">
+            <z-card [zTitle]="'Nouvelle Session'" [zDescription]="'Créez une nouvelle session de jeu'">
+                <button z-button class="w-full" [zDisabled]="true">
+                    Créer une Session (Bientôt)
+                </button>
+            </z-card>
+
+            <z-card [zTitle]="'Rejoindre une Session'" [zDescription]="'Participez à une session existante'">
+                <button z-button zType="outline" class="w-full" [zDisabled]="true">
+                    Voir les Sessions (Bientôt)
+                </button>
+            </z-card>
+        </div>
+
+        <!-- Recent Activity -->
+        <z-card [zTitle]="'Activité Récente'" [zDescription]="'Vos dernières parties'">
+            <div class="text-center py-12 text-muted-foreground">
+                <p>Aucune activité récente</p>
+                <p class="text-sm mt-2">Commencez à jouer pour voir vos statistiques ici !</p>
+            </div>
+        </z-card>
+    </main>
+</div>
