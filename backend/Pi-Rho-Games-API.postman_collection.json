@@ -1,0 +1,422 @@
+{
+    "info": {
+        "name": "Pi & Rho's Games API",
+        "description": "API complète pour l'évaluation de prix de produits - Toutes les routes testables",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "🔐 Auth",
+            "description": "Authentification et gestion utilisateur",
+            "item": [
+                {
+                    "name": "Register User",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 201) {",
+                                    "    const response = pm.response.json();",
+                                    "    pm.environment.set('token', response.token);",
+                                    "    pm.environment.set('userId', response.user.id);",
+                                    "    pm.environment.set('username', response.user.username);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"newuser@test.com\",\n  \"username\": \"New User\",\n  \"password\": \"password123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/register",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "auth", "register"]
+                        }
+                    }
+                },
+                {
+                    "name": "Login Alice (User)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    const response = pm.response.json();",
+                                    "    pm.environment.set('token', response.token);",
+                                    "    pm.environment.set('userId', response.user.id);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"alice@test.com\",\n  \"password\": \"password123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/login",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "auth", "login"]
+                        }
+                    }
+                },
+                {
+                    "name": "Login Admin",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    const response = pm.response.json();",
+                                    "    pm.environment.set('token', response.token);",
+                                    "    pm.environment.set('userId', response.user.id);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"admin@dfs.com\",\n  \"password\": \"password123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/login",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "auth", "login"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "📦 Products",
+            "description": "Gestion des produits",
+            "item": [
+                {
+                    "name": "Get All Products",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/products",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "products"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Product by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/products/1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "products", "1"]
+                        }
+                    }
+                },
+                {
+                    "name": "Create Product (Admin)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "POST",
+                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Test Product\",\n  \"price\": 99.99,\n  \"image_url\": \"https://via.placeholder.com/400\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/products",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "products"]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Product (Admin)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "PUT",
+                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Updated Product\",\n  \"price\": 149.99,\n  \"image_url\": \"https://via.placeholder.com/400\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/products/21",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "products", "21"]
+                        }
+                    }
+                },
+                {
+                    "name": "Delete Product (Admin)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/products/21",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "products", "21"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "🎮 Sessions",
+            "description": "Gestion des sessions de jeu",
+            "item": [
+                {
+                    "name": "Create Public Session",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 201) {",
+                                    "    const response = pm.response.json();",
+                                    "    pm.environment.set('sessionId', response.id);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "POST",
+                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Test Public Session\",\n  \"difficulty\": \"medium\",\n  \"visibility\": \"public\",\n  \"max_participants\": 10\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/sessions",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "sessions"]
+                        }
+                    }
+                },
+                {
+                    "name": "Create Private Session",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "POST",
+                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Private VIP Session\",\n  \"difficulty\": \"hard\",\n  \"visibility\": \"private\",\n  \"max_participants\": 5\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/sessions",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "sessions"]
+                        }
+                    }
+                },
+                {
+                    "name": "Create Friends Only Session",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "POST",
+                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Friends Only Session\",\n  \"difficulty\": \"easy\",\n  \"visibility\": \"friends_only\",\n  \"max_participants\": 8\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/sessions",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "sessions"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get All Sessions (Authenticated)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/sessions",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "sessions"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Sessions - Public Only (No Auth)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/sessions",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "sessions"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Active Sessions",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/sessions?status=active",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "sessions"],
+                            "query": [{"key": "status", "value": "active"}]
+                        }
+                    }
+                },
+                {
+                    "name": "Get My Created Sessions",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/sessions?creator_id={{userId}}",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "sessions"],
+                            "query": [{"key": "creator_id", "value": "{{userId}}"}]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Session by ID",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/sessions/{{sessionId}}",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "sessions", "{{sessionId}}"]
+                        }
+                    }
+                },
+                {
+                    "name": "Join Session",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 201) {",
+                                    "    const response = pm.response.json();",
+                                    "    pm.environment.set('participantId', response.participant.id);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/sessions/{{sessionId}}/join",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "sessions", "{{sessionId}}", "join"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Session Participants",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/sessions/{{sessionId}}/participants",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "sessions", "{{sessionId}}", "participants"]
+                        }
+                    }
+                },
+                {
+                    "name": "Delete Session (Creator or Admin)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/sessions/{{sessionId}}",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "sessions", "{{sessionId}}"]
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:3000",
+            "type": "string"
+        }
+    ]
+}
