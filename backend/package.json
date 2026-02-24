@@ -8,7 +8,7 @@
     "start": "node dist/index.js",
     "build": "tsc",
     "dev:nodemon": "nodemon --exec tsx src/index.ts",
-    "db:init": "psql -U postgres -f src/db/init.sql",
+    "db:init": "powershell -ExecutionPolicy Bypass -File scripts/init-db.ps1",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": ["express", "typescript", "postgresql", "api"],
