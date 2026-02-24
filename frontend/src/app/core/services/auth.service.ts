@@ -46,11 +46,11 @@ export class AuthService {
   public currentUser$ = this.currentUserSubject.asObservable();
 
   constructor() {
-    // Load user from token on init
+    // Check if user is already logged in from stored token
     const token = this.getToken();
     if (token) {
-      // TODO: Validate token and load user
-      // this.loadCurrentUser();
+      // Token validation will be handled by the interceptor
+      // If the token is invalid, the backend will return 401
     }
   }
 
