@@ -1,0 +1,206 @@
+<div class="min-h-screen bg-linear-to-br from-purple-50 to-orange-50 dark:from-gray-900 dark:to-gray-800">
+    <!-- Header -->
+    <header
+        class="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <img src="/logo.svg" alt="Logo" class="h-10 w-10" />
+                    <div>
+                        <h1
+                            class="text-2xl font-bold bg-linear-to-r from-primary to-orange-500 bg-clip-text text-transparent">
+                            {{ sessionName() }}
+                        </h1>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                            Devinez le prix de 4 produits
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <app-theme-toggle />
+                    <a [routerLink]="['/sessions']" z-button zType="outline" zSize="sm">
+                        <i class='bx bx-arrow-back'></i>
+                        Sessions
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Error Message -->
+        @if (error()) {
+        <div
+            class="mb-6 bg-destructive/10 text-destructive text-sm p-4 rounded-lg border border-destructive/20 flex items-start gap-3">
+            <i class='bx bx-error-circle text-xl'></i>
+            <div>
+                <p class="font-semibold">{{ error() }}</p>
+                <a [routerLink]="['/sessions']" class="underline mt-2 inline-block">Retour aux sessions</a>
+            </div>
+        </div>
+        }
+
+        <!-- Progress Section -->
+        @if (!loading() && !error()) {
+        <z-card class="p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                        <i class='bx bx-trophy'></i>
+                        Score de session
+                    </h2>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        {{ answeredCount() }} / {{ totalProducts() }} produits évalués
+                    </p>
+                </div>
+                <div class="text-right">
+                    <div class="text-4xl font-bold text-primary">{{ sessionScore() }}</div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">points</p>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="relative w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                <div class="absolute top-0 left-0 h-full bg-linear-to-r from-primary to-orange-500 transition-all duration-500"
+                    [style.width.%]="progressPercent()">
+                </div>
+            </div>
+
+            @if (gameCompleted()) {
+            <div
+                class="mt-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-center">
+                <i class='bx bx-check-circle text-3xl text-green-600 dark:text-green-400 mb-2'></i>
+                <p class="font-semibold text-green-900 dark:text-green-100">
+                    🎉 Session terminée ! Score final : {{ sessionScore() }} points
+                </p>
+                <p class="text-sm text-green-700 dark:text-green-300 mt-1">
+                    Redirection vers le classement...
+                </p>
+            </div>
+            }
+        </z-card>
+        }
+
+        <!-- Loading State -->
+        @if (loading()) {
+        <div class="text-center py-12">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            <p class="mt-4 text-gray-600 dark:text-gray-400">Chargement du jeu...</p>
+        </div>
+        }
+
+        <!-- Products Grid -->
+        @if (!loading() && !error()) {
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            @for (productAnswer of products(); track productAnswer.product.id) {
+            <z-card class="p-6">
+                <!-- Product Header -->
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span
+                                class="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-white font-bold text-sm">
+                                {{ productAnswer.product.position }}
+                            </span>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                {{ productAnswer.product.name }}
+                            </h3>
+                        </div>
+                    </div>
+                    @if (productAnswer.submitted) {
+                    <z-badge [zType]="'default'">
+                        <i class='bx bx-check'></i> Répondu
+                    </z-badge>
+                    }
+                </div>
+
+                <!-- Product Image -->
+                <div class="mb-4">
+                    @if (productAnswer.product.image_url) {
+                    <img [src]="productAnswer.product.image_url" [alt]="productAnswer.product.name"
+                        class="w-full h-48 object-cover rounded-lg bg-gray-100 dark:bg-gray-800" />
+                    } @else {
+                    <div class="w-full h-48 flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-lg">
+                        <i class='bx bx-package text-6xl text-gray-400'></i>
+                    </div>
+                    }
+                </div>
+
+                <!-- Answer Form (if not submitted) -->
+                @if (!productAnswer.submitted) {
+                <div class="space-y-4">
+                    <div class="space-y-2">
+                        <label z-form-label [for]="'price-' + productAnswer.product.id">
+                            <i class='bx bx-euro'></i>
+                            Devinez le prix
+                        </label>
+                        <div class="relative">
+                            <input z-input [id]="'price-' + productAnswer.product.id" type="number" step="0.01"
+                                min="0.01" [(ngModel)]="productAnswer.guessedPrice" placeholder="ex: 19.99"
+                                class="w-full" />
+                            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
+                                €
+                            </span>
+                        </div>
+                    </div>
+
+                    <button z-button type="button" (click)="submitGuess(productAnswer)" class="w-full"
+                        [zDisabled]="!canSubmit(productAnswer)" [zLoading]="submitting()">
+                        @if (submitting()) {
+                        Envoi en cours...
+                        } @else {
+                        <i class='bx bx-send'></i>
+                        Valider ma réponse
+                        }
+                    </button>
+                </div>
+                }
+
+                <!-- Answer Result (if submitted) -->
+                @if (productAnswer.submitted && productAnswer.result) {
+                <div class="space-y-3">
+                    <!-- Score Badge -->
+                    <div class="flex items-center justify-center gap-2 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                        <span class="text-sm text-gray-600 dark:text-gray-400">Score :</span>
+                        <z-badge [zType]="getScoreColor(productAnswer.result.score)" class="text-lg px-4 py-2">
+                            {{ productAnswer.result.score }} points
+                        </z-badge>
+                    </div>
+
+                    <!-- Price Comparison -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div
+                            class="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                            <p class="text-xs text-blue-600 dark:text-blue-400 mb-1">Votre estimation</p>
+                            <p class="font-bold text-blue-900 dark:text-blue-100">
+                                {{ formatPrice(productAnswer.result.answer.guessed_price) }}
+                            </p>
+                        </div>
+                        <div
+                            class="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                            <p class="text-xs text-green-600 dark:text-green-400 mb-1">Prix réel</p>
+                            <p class="font-bold text-green-900 dark:text-green-100">
+                                {{ formatPrice(productAnswer.result.actual_price) }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Difference -->
+                    <div class="text-center p-2 bg-gray-100 dark:bg-gray-800 rounded">
+                        <p class="text-xs text-gray-600 dark:text-gray-400">
+                            Différence :
+                            <span class="font-semibold">
+                                {{ formatPrice(Math.abs(productAnswer.result.answer.guessed_price -
+                                productAnswer.result.actual_price)) }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                }
+            </z-card>
+            }
+        </div>
+        }
+    </main>
+</div>
