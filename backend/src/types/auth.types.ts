@@ -1,9 +1,9 @@
-import { Request } from 'express';
+import { Request } from "express";
 
 // Enums
-export type UserRole = 'user' | 'admin';
-export type SessionStatus = 'active' | 'completed' | 'archived';
-export type SessionDifficulty = 'easy' | 'medium' | 'hard';
+export type UserRole = "user" | "admin";
+export type SessionStatus = "active" | "completed" | "archived";
+export type SessionDifficulty = "easy" | "medium" | "hard";
 
 // Types pour l'authentification
 export interface UserPayload {
