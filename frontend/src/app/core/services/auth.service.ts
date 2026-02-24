@@ -47,10 +47,12 @@ export class AuthService {
 
   constructor() {
     // Check if user is already logged in from stored token
-    const token = this.getToken();
-    if (token) {
-      // Token validation will be handled by the interceptor
-      // If the token is invalid, the backend will return 401
+    if (typeof window !== 'undefined') {
+      const token = this.getToken();
+      if (token) {
+        // Token validation will be handled by the interceptor
+        // If the token is invalid, the backend will return 401
+      }
     }
   }
 
@@ -73,17 +75,24 @@ export class AuthService {
   }
 
   logout(): void {
-    localStorage.removeItem(this.TOKEN_KEY);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(this.TOKEN_KEY);
+    }
     this.currentUserSubject.next(null);
     this.router.navigate(['/']);
   }
 
   getToken(): string | null {
+    if (typeof window === 'undefined') {
+      return null;
+    }
     return localStorage.getItem(this.TOKEN_KEY);
   }
 
   setToken(token: string): void {
-    localStorage.setItem(this.TOKEN_KEY, token);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(this.TOKEN_KEY, token);
+    }
   }
 
   isAuthenticated(): boolean {

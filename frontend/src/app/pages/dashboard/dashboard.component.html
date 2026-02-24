@@ -38,16 +38,16 @@
         <!-- User Stats -->
         @if (currentUser) {
         <div class="grid md:grid-cols-4 gap-6 mb-8">
-            <z-card [zTitle]="currentUser.total_score.toString()" [zDescription]="'Score Total'">
+            <z-card [zTitle]="getStatValue('total_score')" [zDescription]="'Score Total'">
             </z-card>
 
-            <z-card [zTitle]="currentUser.games_played.toString()" [zDescription]="'Parties Jouées'">
+            <z-card [zTitle]="getStatValue('games_played')" [zDescription]="'Parties Jouées'">
             </z-card>
 
-            <z-card [zTitle]="currentUser.best_session_score ? currentUser.best_session_score.toString() : '-'" [zDescription]="'Meilleur Score'">
+            <z-card [zTitle]="getStatValue('best_session_score')" [zDescription]="'Meilleur Score'">
             </z-card>
 
-            <z-card [zTitle]="(currentUser.average_score ? (currentUser.average_score | number:'1.0-0') : '-') || '-'" [zDescription]="'Score Moyen'">
+            <z-card [zTitle]="getStatValue('average_score')" [zDescription]="'Score Moyen'">
             </z-card>
         </div>
         }
