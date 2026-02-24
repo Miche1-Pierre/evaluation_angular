@@ -1,9 +1,10 @@
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import { UserPayload } from '../types/auth.types';
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import { UserPayload } from "../types/auth.types";
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
+const JWT_SECRET =
+  process.env.JWT_SECRET || "your-secret-key-change-in-production";
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
 const SALT_ROUNDS = 10;
 
 /**
@@ -16,7 +17,10 @@ export const hashPassword = async (password: string): Promise<string> => {
 /**
  * Compare un mot de passe avec son hash
  */
-export const comparePassword = async (password: string, hash: string): Promise<boolean> => {
+export const comparePassword = async (
+  password: string,
+  hash: string,
+): Promise<boolean> => {
   return await bcrypt.compare(password, hash);
 };
 
@@ -33,11 +37,7 @@ export const generateToken = (payload: UserPayload): string => {
  * Vérifie et décode un token JWT
  */
 export const verifyToken = (token: string): UserPayload => {
-  try {
-    return jwt.verify(token, JWT_SECRET) as UserPayload;
-  } catch (error) {
-    throw new Error('Invalid or expired token');
-  }
+  return jwt.verify(token, JWT_SECRET) as UserPayload;
 };
 
 /**
@@ -61,6 +61,6 @@ export const isValidPassword = (password: string): boolean => {
  * 3-20 caractères, alphanumériques et underscores
  */
 export const isValidUsername = (username: string): boolean => {
-  const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+  const usernameRegex = /^\w{3,20}$/;
   return usernameRegex.test(username);
 };
