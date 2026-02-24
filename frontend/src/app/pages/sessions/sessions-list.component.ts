@@ -119,7 +119,7 @@ export class SessionsListComponent implements OnInit {
       next: (response) => {
         alert(response.message);
         this.loadSessions(); // Recharger pour mettre à jour les compteurs
-        this.router.navigate(['/game', sessionId]);
+        this.router.navigate(['/sessions', sessionId, 'play']);
       },
       error: (err) => {
         const errorMessage = err.error?.error || 'Erreur lors de la connexion à la session';
@@ -129,7 +129,7 @@ export class SessionsListComponent implements OnInit {
   }
 
   playSession(sessionId: number): void {
-    this.router.navigate(['/game', sessionId]);
+    this.router.navigate(['/sessions', sessionId, 'play']);
   }
 
   getDifficultyColor(difficulty: string): 'default' | 'secondary' | 'destructive' | 'outline' {
