@@ -4,12 +4,13 @@
   <header class="container mx-auto px-4 py-6">
     <nav class="flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <img src="/assets/logo.svg" alt="Logo" class="w-10 h-10" />
+        <img src="logo.svg" alt="Logo" class="w-10 h-10" />
         <span class="text-2xl font-bold bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">
           Pi & Rho's Games
         </span>
       </div>
       <div class="flex items-center gap-3">
+        <app-theme-toggle />
         <a routerLink="/login" z-button zType="ghost">Connexion</a>
         <a routerLink="/register" z-button>Inscription</a>
       </div>
@@ -34,9 +35,11 @@
 
       <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
         <a routerLink="/register" z-button zSize="lg" class="text-lg px-8">
+          <i class='bx bx-user-plus mr-2'></i>
           Commencer à Jouer
         </a>
         <a routerLink="/login" z-button zSize="lg" zType="outline" class="text-lg px-8">
+          <i class='bx bx-log-in mr-2'></i>
           Se Connecter
         </a>
       </div>
@@ -76,7 +79,9 @@
           [zTitle]="feature.title" 
           [zDescription]="feature.description"
           class="relative overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1">
-          <div class="text-4xl mb-4">{{ feature.icon }}</div>
+          <div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+            <i class="bx text-3xl text-primary" [class]="feature.icon"></i>
+          </div>
         </z-card>
       }
     </div>
