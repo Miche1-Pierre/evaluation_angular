@@ -56,8 +56,10 @@ export class LoginComponent {
     this.error = null;
 
     this.authService.login(this.loginForm.value).subscribe({
-      next: () => {
-        this.router.navigate(['/dashboard']);
+      next: (response) => {
+        // Redirect based on user role
+        const redirectTo = response.user.role === 'admin' ? '/admin' : '/dashboard';
+        this.router.navigate([redirectTo]);
       },
       error: (err: any) => {
         this.error = err.error?.message || 'An error occurred during login';
