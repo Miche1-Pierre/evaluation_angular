@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import exampleRoutes from './example.routes';
+import authRoutes from './auth.routes';
 
 const router = Router();
 
 // Register routes
-router.use('/examples', exampleRoutes);
+router.use('/auth', authRoutes);
 
 export default router;
