@@ -62,6 +62,7 @@ export const isValidPassword = (password: string): boolean => {
  */
 export const isValidUsername = (username: string): boolean => {
   // Accepte lettres, chiffres, espaces, apostrophes, tirets, underscores, &
-  const usernameRegex = /^[a-zA-Z0-9àâäéèêëïîôùûüÿçÀÂÄÉÈÊËÏÎÔÙÛÜŸÇ\s'\-_&]{3,30}$/;
+  const usernameRegex =
+    /^[a-zA-Z0-9àâäéèêëïîôùûüÿçÀÂÄÉÈÊËÏÎÔÙÛÜŸÇ\s'\-_&]{3,30}$/;
   return usernameRegex.test(username.trim()) && username.trim().length >= 3;
 };
