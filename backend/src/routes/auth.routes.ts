@@ -30,13 +30,13 @@ router.post("/register", async (req: Request, res: Response): Promise<void> => {
     if (!email || !username || !password) {
       res
         .status(400)
-        .json({ error: "Email, username and password are required" });
+        .json({ error: "Email, nom d'utilisateur et mot de passe sont requis" });
       return;
     }
 
     // Validation du format email
     if (!isValidEmail(email)) {
-      res.status(400).json({ error: "Invalid email format" });
+      res.status(400).json({ error: "Format d'email invalide" });
       return;
     }
 
@@ -44,14 +44,14 @@ router.post("/register", async (req: Request, res: Response): Promise<void> => {
     if (!isValidUsername(username)) {
       res.status(400).json({
         error:
-          "Username must be 3-20 characters, alphanumeric and underscores only",
+          "Le nom d'utilisateur doit contenir 3-30 caractères (lettres, chiffres, espaces et symboles courants acceptés)",
       });
       return;
     }
 
     // Validation du mot de passe
     if (!isValidPassword(password)) {
-      res.status(400).json({ error: "Password must be at least 8 characters" });
+      res.status(400).json({ error: "Le mot de passe doit contenir au moins 8 caractères" });
       return;
     }
 
@@ -62,7 +62,7 @@ router.post("/register", async (req: Request, res: Response): Promise<void> => {
     );
 
     if (emailCheck.rows.length > 0) {
-      res.status(409).json({ error: "Email already exists" });
+      res.status(409).json({ error: "Cet email est déjà utilisé" });
       return;
     }
 
@@ -73,7 +73,7 @@ router.post("/register", async (req: Request, res: Response): Promise<void> => {
     );
 
     if (usernameCheck.rows.length > 0) {
-      res.status(409).json({ error: "Username already exists" });
+      res.status(409).json({ error: "Ce nom d'utilisateur est déjà utilisé" });
       return;
     }
 
@@ -114,7 +114,7 @@ router.post("/register", async (req: Request, res: Response): Promise<void> => {
     res.status(201).json(response);
   } catch (error) {
     console.error("Error in register:", error);
-    res.status(500).json({ error: "Failed to register user" });
+    res.status(500).json({ error: "Erreur lors de l'inscription" });
   }
 });
 
@@ -128,7 +128,7 @@ router.post("/login", async (req: Request, res: Response): Promise<void> => {
 
     // Validation des champs
     if (!email || !password) {
-      res.status(400).json({ error: "Email and password are required" });
+      res.status(400).json({ error: "Email et mot de passe sont requis" });
       return;
     }
 
@@ -139,7 +139,7 @@ router.post("/login", async (req: Request, res: Response): Promise<void> => {
     );
 
     if (result.rows.length === 0) {
-      res.status(401).json({ error: "Invalid credentials" });
+      res.status(401).json({ error: "Email ou mot de passe incorrect" });
       return;
     }
 
@@ -149,7 +149,7 @@ router.post("/login", async (req: Request, res: Response): Promise<void> => {
     const isPasswordValid = await comparePassword(password, user.password_hash);
 
     if (!isPasswordValid) {
-      res.status(401).json({ error: "Invalid credentials" });
+      res.status(401).json({ error: "Email ou mot de passe incorrect" });
       return;
     }
 
@@ -182,7 +182,7 @@ router.post("/login", async (req: Request, res: Response): Promise<void> => {
     res.status(200).json(response);
   } catch (error) {
     console.error("Error in login:", error);
-    res.status(500).json({ error: "Failed to login" });
+    res.status(500).json({ error: "Erreur lors de la connexion" });
   }
 });
 
