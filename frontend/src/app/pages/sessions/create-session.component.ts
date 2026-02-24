@@ -42,6 +42,7 @@ export class CreateSessionComponent implements OnInit {
   loadingThemes = signal(true);
   loadingProducts = signal(false);
   error = signal<string | null>(null);
+  formValid = signal(false);
 
   readonly difficulties: { value: SessionDifficulty; label: string }[] = [
     { value: 'easy', label: 'Facile' },
@@ -58,7 +59,7 @@ export class CreateSessionComponent implements OnInit {
   // Computed signal pour savoir si on peut continuer
   canProceedToProducts = computed(() => this.selectedThemeId() !== null);
   canSubmit = computed(() => 
-    this.sessionForm?.valid && 
+    this.formValid() && 
     this.selectedProducts().length === 4
   );
 
@@ -74,6 +75,13 @@ export class CreateSessionComponent implements OnInit {
       visibility: ['public', Validators.required],
       max_participants: [null, [Validators.min(2), Validators.max(100)]],
     });
+
+    // Mettre à jour le signal formValid quand le formulaire change
+    this.sessionForm.statusChanges.subscribe(() => {
+      this.formValid.set(this.sessionForm.valid);
+    });
+    // Initialiser le signal avec la validité actuelle
+    this.formValid.set(this.sessionForm.valid);
   }
 
   private loadThemes(): void {

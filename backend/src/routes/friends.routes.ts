@@ -94,6 +94,111 @@ router.get(
  * Envoyer une demande d'amitié
  * Body: { receiver_email } ou { receiver_username } ou { receiver_id }
  */
+router.post(
+  "/request",
+  authMiddleware,
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    const client = await pool.connect();
+
+    try {
+      const senderId = req.user!.id;
+      const { receiver_email, receiver_username, receiver_id } = req.body;
+
+      if (!receiver_email && !receiver_username && !receiver_id) {
+        res.status(400).json({
+          error: "Vous devez fournir receiver_email, receiver_username ou receiver_id",
+        });
+        return;
+      }
+
+      await client.query("BEGIN");
+
+      // Trouver l'utilisateur destinataire
+      let receiverResult;
+      if (receiver_id) {
+        receiverResult = await client.query(
+          `SELECT id, username, email FROM users WHERE id = $1`,
+          [receiver_id],
+        );
+      } else if (receiver_email) {
+        receiverResult = await client.query(
+          `SELECT id, username, email FROM users WHERE email = $1`,
+          [receiver_email],
+        );
+      } else {
+        receiverResult = await client.query(
+          `SELECT id, username, email FROM users WHERE username = $1`,
+          [receiver_username],
+        );
+      }
+
+      if (receiverResult.rows.length === 0) {
+        await client.query("ROLLBACK");
+        res.status(404).json({ error: "Utilisateur non trouvé" });
+        return;
+      }
+
+      const receiverId = receiverResult.rows[0].id;
+
+      // Vérifier qu'on ne s'envoie pas une demande à soi-même
+      if (senderId === receiverId) {
+        await client.query("ROLLBACK");
+        res.status(400).json({ error: "Vous ne pouvez pas vous ajouter vous-même" });
+        return;
+      }
+
+      // Vérifier si déjà amis
+      const friendshipResult = await client.query(
+        `SELECT * FROM friendships 
+         WHERE (user_id_1 = $1 AND user_id_2 = $2) 
+            OR (user_id_1 = $2 AND user_id_2 = $1)`,
+        [senderId, receiverId],
+      );
+
+      if (friendshipResult.rows.length > 0) {
+        await client.query("ROLLBACK");
+        res.status(400).json({ error: "Vous êtes déjà amis" });
+        return;
+      }
+
+      // Vérifier s'il y a déjà une demande en attente
+      const existingRequestResult = await client.query(
+        `SELECT * FROM friend_requests 
+         WHERE ((sender_id = $1 AND receiver_id = $2) 
+             OR (sender_id = $2 AND receiver_id = $1))
+         AND status = 'pending'`,
+        [senderId, receiverId],
+      );
+
+      if (existingRequestResult.rows.length > 0) {
+        await client.query("ROLLBACK");
+        res.status(400).json({ error: "Une demande est déjà en attente" });
+        return;
+      }
+
+      // Créer la demande
+      const requestResult = await client.query(
+        `INSERT INTO friend_requests (sender_id, receiver_id, status)
+         VALUES ($1, $2, 'pending')
+         RETURNING *`,
+        [senderId, receiverId],
+      );
+
+      await client.query("COMMIT");
+
+      res.status(201).json({
+        message: "Demande d'amitié envoyée avec succès",
+        request: requestResult.rows[0],
+      });
+    } catch (error) {
+      await client.query("ROLLBACK");
+      console.error("Error sending friend request:", error);
+      res.status(500).json({ error: "Erreur lors de l'envoi de la demande" });
+    } finally {
+      client.release();
+    }
+  },
+);
 
 /**
  * GET /api/friends/requests
