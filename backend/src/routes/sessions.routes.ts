@@ -658,4 +658,258 @@ router.get(
   },
 );
 
+/**
+ * GET /api/sessions/:id/products
+ * Récupère les 4 produits de la session SANS les prix
+ * Accessible aux participants de la session
+ */
+router.get(
+  "/:id/products",
+  authMiddleware,
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const { id: sessionId } = req.params;
+      const userId = req.user!.id;
+
+      // Vérifier que l'utilisateur est participant
+      const participantCheck = await pool.query(
+        `SELECT id FROM participants WHERE session_id = $1 AND user_id = $2`,
+        [sessionId, userId],
+      );
+
+      if (participantCheck.rows.length === 0) {
+        res.status(403).json({ error: "Vous devez participer à cette session" });
+        return;
+      }
+
+      // Récupérer les produits sans les prix
+      const result = await pool.query(
+        `SELECT 
+          p.id, p.name, p.image_url, sp.position
+         FROM session_products sp
+         JOIN products p ON p.id = sp.product_id
+         WHERE sp.session_id = $1
+         ORDER BY sp.position ASC`,
+        [sessionId],
+      );
+
+      res.json(result.rows);
+    } catch (error) {
+      console.error("Error fetching session products:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération des produits" });
+    }
+  },
+);
+
+/**
+ * POST /api/sessions/:id/answer
+ * Soumet une réponse pour un produit
+ * Body: { product_id: number, guessed_price: number }
+ * Calcule le score: 100 - |prix_estimé - prix_réel|
+ */
+router.post(
+  "/:id/answer",
+  authMiddleware,
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    const client = await pool.connect();
+
+    try {
+      const { id: sessionId } = req.params;
+      const userId = req.user!.id;
+      const { product_id, guessed_price } = req.body;
+
+      // Validation
+      if (!product_id || guessed_price === undefined || guessed_price < 0) {
+        res.status(400).json({ 
+          error: "product_id et guessed_price (>= 0) requis" 
+        });
+        return;
+      }
+
+      await client.query("BEGIN");
+
+      // Vérifier que l'utilisateur est participant
+      const participantResult = await client.query(
+        `SELECT id, session_score, completed FROM participants 
+         WHERE session_id = $1 AND user_id = $2`,
+        [sessionId, userId],
+      );
+
+      if (participantResult.rows.length === 0) {
+        await client.query("ROLLBACK");
+        res.status(403).json({ error: "Vous devez participer à cette session" });
+        return;
+      }
+
+      const participant = participantResult.rows[0];
+
+      // Vérifier que la session n'est pas terminée
+      const sessionResult = await client.query(
+        `SELECT status FROM sessions WHERE id = $1`,
+        [sessionId],
+      );
+
+      if (sessionResult.rows[0].status === "completed") {
+        await client.query("ROLLBACK");
+        res.status(400).json({ error: "Cette session est déjà terminée" });
+        return;
+      }
+
+      // Vérifier que le produit fait partie de la session
+      const productInSession = await client.query(
+        `SELECT sp.product_id, p.price 
+         FROM session_products sp
+         JOIN products p ON p.id = sp.product_id
+         WHERE sp.session_id = $1 AND sp.product_id = $2`,
+        [sessionId, product_id],
+      );
+
+      if (productInSession.rows.length === 0) {
+        await client.query("ROLLBACK");
+        res.status(400).json({ error: "Ce produit ne fait pas partie de cette session" });
+        return;
+      }
+
+      const actualPrice = parseFloat(productInSession.rows[0].price);
+
+      // Vérifier que l'utilisateur n'a pas déjà répondu à ce produit
+      const existingAnswer = await client.query(
+        `SELECT id FROM answers 
+         WHERE participant_id = $1 AND product_id = $2`,
+        [participant.id, product_id],
+      );
+
+      if (existingAnswer.rows.length > 0) {
+        await client.query("ROLLBACK");
+        res.status(400).json({ error: "Vous avez déjà répondu à ce produit" });
+        return;
+      }
+
+      // Calculer le score: 100 - |différence|, minimum 0
+      const difference = Math.abs(parseFloat(guessed_price) - actualPrice);
+      const score = Math.max(0, Math.round(100 - difference));
+
+      // Enregistrer la réponse
+      const answerResult = await client.query(
+        `INSERT INTO answers (participant_id, product_id, guessed_price, score)
+         VALUES ($1, $2, $3, $4)
+         RETURNING id, participant_id, product_id, guessed_price, score, created_at`,
+        [participant.id, product_id, guessed_price, score],
+      );
+
+      // Mettre à jour le score total du participant
+      const newSessionScore = participant.session_score + score;
+
+      // Vérifier si le participant a répondu à tous les produits (4)
+      const answerCount = await client.query(
+        `SELECT COUNT(*) as count FROM answers WHERE participant_id = $1`,
+        [participant.id],
+      );
+
+      const totalAnswered = parseInt(answerCount.rows[0].count);
+      const isCompleted = totalAnswered >= 4;
+
+      // Mettre à jour le participant
+      await client.query(
+        `UPDATE participants 
+         SET session_score = $1, completed = $2, updated_at = CURRENT_TIMESTAMP
+         WHERE id = $3`,
+        [newSessionScore, isCompleted, participant.id],
+      );
+
+      // Si le participant a terminé, mettre à jour ses stats globales
+      if (isCompleted) {
+        await client.query(
+          `UPDATE users 
+           SET 
+             total_score = total_score + $1,
+             games_played = games_played + 1,
+             best_session_score = GREATEST(best_session_score, $1),
+             average_score = (total_score + $1)::decimal / (games_played + 1),
+             updated_at = CURRENT_TIMESTAMP
+           WHERE id = $2`,
+          [newSessionScore, userId],
+        );
+      }
+
+      await client.query("COMMIT");
+
+      res.json({
+        message: isCompleted 
+          ? "Réponse enregistrée ! Vous avez terminé la session"
+          : "Réponse enregistrée",
+        answer: answerResult.rows[0],
+        score,
+        actual_price: actualPrice,
+        session_score: newSessionScore,
+        completed: isCompleted,
+        answers_count: totalAnswered,
+      });
+    } catch (error) {
+      await client.query("ROLLBACK");
+      console.error("Error submitting answer:", error);
+      res.status(500).json({ error: "Erreur lors de la soumission de la réponse" });
+    } finally {
+      client.release();
+    }
+  },
+);
+
+/**
+ * GET /api/sessions/:id/leaderboard
+ * Classement des participants de la session
+ */
+router.get(
+  "/:id/leaderboard",
+  authMiddleware,
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const { id: sessionId } = req.params;
+
+      // Vérifier que la session existe
+      const sessionCheck = await pool.query(
+        `SELECT id FROM sessions WHERE id = $1`,
+        [sessionId],
+      );
+
+      if (sessionCheck.rows.length === 0) {
+        res.status(404).json({ error: "Session non trouvée" });
+        return;
+      }
+
+      // Récupérer le classement
+      const result = await pool.query(
+        `SELECT 
+          p.id as participant_id,
+          p.session_score,
+          p.completed,
+          u.id as user_id,
+          u.username,
+          u.email,
+          COUNT(a.id) as answers_count
+         FROM participants p
+         JOIN users u ON u.id = p.user_id
+         LEFT JOIN answers a ON a.participant_id = p.id
+         WHERE p.session_id = $1
+         GROUP BY p.id, u.id
+         ORDER BY p.session_score DESC, p.created_at ASC`,
+        [sessionId],
+      );
+
+      // Ajouter le rang
+      const leaderboard = result.rows.map((row, index) => ({
+        rank: index + 1,
+        ...row,
+        session_score: parseInt(row.session_score),
+        answers_count: parseInt(row.answers_count),
+      }));
+
+      res.json(leaderboard);
+    } catch (error) {
+      console.error("Error fetching session leaderboard:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération du classement" });
+    }
+  },
+);
+
 export default router;
