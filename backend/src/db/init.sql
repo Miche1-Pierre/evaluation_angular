@@ -4,7 +4,7 @@
 -- Connect to the database
 \c angular;
 
--- Drop existing tables (for clean init)
+-- Drop existing tables and types (for clean init)
 DROP TABLE IF EXISTS answers CASCADE;
 DROP TABLE IF EXISTS participants CASCADE;
 DROP TABLE IF EXISTS session_products CASCADE;
@@ -12,9 +12,20 @@ DROP TABLE IF EXISTS sessions CASCADE;
 DROP TABLE IF EXISTS products CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 
+DROP TYPE IF EXISTS user_role CASCADE;
+DROP TYPE IF EXISTS session_status CASCADE;
+DROP TYPE IF EXISTS session_difficulty CASCADE;
+
+-- ============================================
+-- ENUM Types
+-- ============================================
+CREATE TYPE user_role AS ENUM ('user', 'admin');
+CREATE TYPE session_status AS ENUM ('active', 'completed', 'archived');
+CREATE TYPE session_difficulty AS ENUM ('easy', 'medium', 'hard');
+
 -- ============================================
 -- Table: users
--- Comptes utilisateurs avec stats globales
+-- Compuser_role DEFAULT 'user'
 -- ============================================
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
@@ -32,7 +43,7 @@ CREATE TABLE users (
   last_login TIMESTAMP
 );
 
--- =======id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE==========
+-- ============================================
 -- Table: products
 -- Contient la liste de tous les produits disponibles
 -- ============================================
@@ -52,8 +63,9 @@ CREATE TABLE products (
 CREATE TABLE sessions (
   id SERIAL PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
-  creator_email VARCHAR(255) NOT NULL,
-  status VARCHAR(50) DEFAULT 'active' CHECK (status IN ('active', 'completed', 'archived')),
+  creator_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status session_status DEFAULT 'active',
+  difficulty session_difficulty DEFAULT 'medium',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -103,26 +115,26 @@ CREATE TABLE answers (
 
 -- ============================================
 -- Indexes pour optimiser les performances
--- ==============users_email ON users(email);
+-- ============================================
+CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_username ON users(username);
 CREATE INDEX idx_sessions_creator ON sessions(creator_id);
 CREATE INDEX idx_sessions_status ON sessions(status);
 CREATE INDEX idx_session_products_session ON session_products(session_id);
 CREATE INDEX idx_participants_session ON participants(session_id);
-CREATE INDEX idx_participants_user ON participants(user_idid);
-CREATE INDEX idx_participants_email ON participants(user_email);
-CREATE INDEX idx_answUtilisateurs
+CREATE INDEX idx_participants_user ON participants(user_id);
+CREATE INDEX idx_answers_participant ON answers(participant_id);
+
+-- ============================================
+-- Données de test : Utilisateurs
 -- Mot de passe pour tous : "password123" (hash bcrypt)
 -- ============================================
 INSERT INTO users (email, username, password_hash, role, total_score, games_played, best_session_score, average_score) VALUES
-  ('admin@dfs.com', 'AdminDFS', '$2b$10$rKGQ8YvXp5XqzqKZJ8YqG.jNxN0pYvRh0YvXp5XqzqKZJ8YqG.jNxO', 'admin', 0, 0, 0, 0),
-  ('alice@test.com', 'Alice', '$2b$10$rKGQ8YvXp5XqzqKZJ8YqG.jNxN0pYvRh0YvXp5XqzqKZJ8YqG.jNxO', 'user', 285, 3, 98, 95),
-  ('bob@test.com', 'Bob', '$2b$10$rKGQ8YvXp5XqzqKZJ8YqG.jNxN0pYvRh0YvXp5XqzqKZJ8YqG.jNxO', 'user', 242, 3, 87, 80.67),
-  ('charlie@test.com', 'Charlie', '$2b$10$rKGQ8YvXp5XqzqKZJ8YqG.jNxN0pYvRh0YvXp5XqzqKZJ8YqG.jNxO', 'user', 156, 2, 82, 78),
-  ('diana@test.com', 'Diana', '$2b$10$rKGQ8YvXp5XqzqKZJ8YqG.jNxN0pYvRh0YvXp5XqzqKZJ8YqG.jNxO', 'user', 198, 2, 102, 99);
-
--- ============================================
--- Données de test : ers_participant ON answers(participant_id);
+  ('admin@dfs.com', 'AdminDFS', '$2b$10$WFlgzzJiv4PaGCEcJzn24O.RZkjnNvK2l/C4D4O39uyqE9JzJfQTG', 'admin', 0, 0, 0, 0),
+  ('alice@test.com', 'Alice', '$2b$10$WFlgzzJiv4PaGCEcJzn24O.RZkjnNvK2l/C4D4O39uyqE9JzJfQTG', 'user', 285, 3, 98, 95),
+  ('bob@test.com', 'Bob', '$2b$10$WFlgzzJiv4PaGCEcJzn24O.RZkjnNvK2l/C4D4O39uyqE9JzJfQTG', 'user', 242, 3, 87, 80.67),
+  ('charlie@test.com', 'Charlie', '$2b$10$WFlgzzJiv4PaGCEcJzn24O.RZkjnNvK2l/C4D4O39uyqE9JzJfQTG', 'user', 156, 2, 82, 78),
+  ('diana@test.com', 'Diana', '$2b$10$WFlgzzJiv4PaGCEcJzn24O.RZkjnNvK2l/C4D4O39uyqE9JzJfQTG', 'user', 198, 2, 102, 99);
 
 -- ============================================
 -- Données de test : Produits
@@ -137,11 +149,24 @@ INSERT INTO products (name, price, image_url) VALUES
   ('Nintendo Switch OLED', 349.99, 'https://images.unsplash.com/photo-1578303512597-81e6cc155b3e?w=400'),
   ('Xbox Series X', 499.99, 'https://images.unsplash.com/photo-1621259182978-fbf93132d53d?w=400'),
   ('Samsung Galaxy S24 Ultra', 1299.00, 'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=400'),
-  ('Sony Ws de test
+  ('Sony WH-1000XM5', 399.00, 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=400'),
+  ('DJI Mini 3 Pro', 759.00, 'https://images.unsplash.com/photo-1473968512647-3e447244af8f?w=400'),
+  ('GoPro Hero 12', 449.99, 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400'),
+  ('Kindle Paperwhite', 149.99, 'https://images.unsplash.com/photo-1592168415497-102b8d37f1e4?w=400'),
+  ('Ring Video Doorbell', 99.99, 'https://images.unsplash.com/photo-1558002038-1055907df827?w=400'),
+  ('Dyson V15 Detect', 749.00, 'https://images.unsplash.com/photo-1558317374-067fb5f30001?w=400'),
+  ('Nespresso Vertuo', 179.00, 'https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6?w=400'),
+  ('Logitech MX Master 3S', 109.99, 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400'),
+  ('Herman Miller Aeron Chair', 1795.00, 'https://images.unsplash.com/photo-1580480055273-228ff5388ef8?w=400'),
+  ('LG C3 OLED 55"', 1799.00, 'https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=400'),
+  ('Bose SoundLink Revolve+', 329.00, 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400');
+
 -- ============================================
-INSERT INTO sessions (name, creator_id, status) VALUES
-  ('DFS 25-26', 1, 'active'),
-  ('Session Winter 2026', 1, 'completed'),
+-- Sessions de test
+-- ===========================================, difficulty) VALUES
+  ('DFS 25-26', 1, 'active', 'medium'),
+  ('Session Winter 2026', 1, 'completed', 'hard'),
+  ('Best of Tech', 1, 'active', 'easy'completed'),
   ('Best of Tech', 1, 'active');
 
 -- Sélectionner 4 produits pour chaque session
@@ -161,31 +186,13 @@ INSERT INTO session_products (session_id, product_id, position) VALUES
 
 -- Session 3: PS5, Xbox, Switch, Samsung
 INSERT INTO session_products (session_id, product_id, position) VALUES
-  (3, 6,Users' as table_name, COUNT(*) as count FROM users
-UNION ALL
-SELECT 'Products', COUNT(*) FROM products
-UNION ALL
-SELECT 'Sessions', COUNT(*) FROM sessions
-UNION ALL
-SELECT 'Session Products', COUNT(*) FROM session_products
-UNION ALL
-SELECT 'Participants', COUNT(*) FROM participants
-UNION ALL
-SELECT 'Answers', COUNT(*) FROM answers;
+  (3, 6, 1),  -- PS5
+  (3, 8, 2),  -- Xbox Series X
+  (3, 7, 3),  -- Nintendo Switch
+  (3, 9, 4);  -- Samsung Galaxy S24
 
 -- ============================================
--- Classement mondial des joueurs
--- ============================================
-SELECT 
-  username,
-  total_score,
-  games_played,
-  ROUND(average_score, 2) as avg_score,
-  best_session_score
-FROM users
-WHERE role = 'user'
-ORDER BY total_score DESC
-LIMIT 10
+-- Participants et réponses de test
 -- ============================================
 -- Alice participe à la session 1 (en cours)
 INSERT INTO participants (session_id, user_id, session_score, completed) VALUES
@@ -216,20 +223,7 @@ INSERT INTO answers (participant_id, product_id, guessed_price, score) VALUES
   (4, 2, 1250.00, 49),   -- MacBook (diff: 51)
   (4, 4, 1500.00, 49),   -- iPad (diff: 51)
   (4, 5, 900.00, 99),    -- Apple Watch (diff: 1)
-  (4, 3, 280.00, 99);    -- AirPods (diff: 1)=====================
-INSERT INTO sessions (name, creator_email, status) VALUES
-  ('DFS 25-26', 'admin@dfs.com', 'active');
-
--- Sélectionner 4 produits pour cette session (IDs: 1, 6, 10, 13)
-INSERT INTO session_products (session_id, product_id, position) VALUES
-  (1, 1, 1),  -- iPhone 15 Pro
-  (1, 6, 2),  -- PS5
-  (1, 10, 3), -- Sony WH-1000XM5
-  (1, 13, 4); -- Kindle Paperwhite
-
--- Participant de test
-INSERT INTO participants (session_id, user_email, total_score) VALUES
-  (1, 'user@test.com', 0);
+  (4, 3, 280.00, 99);    -- AirPods (diff: 1)
 
 -- ============================================
 -- Afficher les tables créées
@@ -239,10 +233,28 @@ INSERT INTO participants (session_id, user_email, total_score) VALUES
 -- ============================================
 -- Afficher un résumé des données
 -- ============================================
-SELECT 'Products' as table_name, COUNT(*) as count FROM products
+SELECT 'Users' as table_name, COUNT(*) as count FROM users
+UNION ALL
+SELECT 'Products', COUNT(*) FROM products
 UNION ALL
 SELECT 'Sessions', COUNT(*) FROM sessions
 UNION ALL
 SELECT 'Session Products', COUNT(*) FROM session_products
 UNION ALL
-SELECT 'Participants', COUNT(*) FROM participants;
+SELECT 'Participants', COUNT(*) FROM participants
+UNION ALL
+SELECT 'Answers', COUNT(*) FROM answers;
+
+-- ============================================
+-- Classement mondial des joueurs
+-- ============================================
+SELECT 
+  username,
+  total_score,
+  games_played,
+  ROUND(average_score, 2) as avg_score,
+  best_session_score
+FROM users
+WHERE role = 'user'
+ORDER BY total_score DESC
+LIMIT 10;
