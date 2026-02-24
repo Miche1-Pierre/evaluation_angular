@@ -1,0 +1,211 @@
+<div class="min-h-screen bg-linear-to-br from-purple-50 to-orange-50 dark:from-gray-900 dark:to-gray-800">
+    <!-- Header -->
+    <header
+        class="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <img src="/logo.svg" alt="Logo" class="h-10 w-10" />
+                    <h1
+                        class="text-2xl font-bold bg-linear-to-r from-primary to-orange-500 bg-clip-text text-transparent">
+                        Créer une session
+                    </h1>
+                </div>
+                <div class="flex items-center gap-3">
+                    <app-theme-toggle />
+                    <a [routerLink]="['/sessions']" z-button zType="outline" zSize="sm">
+                        <i class='bx bx-arrow-back'></i>
+                        Retour aux sessions
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <form [formGroup]="sessionForm" (ngSubmit)="onSubmit()" class="space-y-6">
+            <!-- Error Message -->
+            @if (error()) {
+            <div
+                class="bg-destructive/10 text-destructive text-sm p-4 rounded-lg border border-destructive/20 flex items-start gap-3">
+                <i class='bx bx-error-circle text-xl'></i>
+                <span>{{ error() }}</span>
+            </div>
+            }
+
+            <!-- Session Details Card -->
+            <z-card class="p-6">
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">
+                    <i class='bx bx-info-circle'></i>
+                    Détails de la session
+                </h2>
+
+                <div class="space-y-4">
+                    <!-- Name Field -->
+                    <div class="space-y-2">
+                        <label z-form-label for="name">
+                            Nom de la session <span class="text-destructive">*</span>
+                        </label>
+                        <input z-input id="name" type="text" formControlName="name"
+                            placeholder="ex: Défi du dimanche"
+                            [class.border-destructive]="name?.invalid && name?.touched" />
+                        @if (name?.invalid && name?.touched) {
+                        <p class="text-sm text-destructive">
+                            @if (name?.errors?.['required']) {
+                            Le nom est requis
+                            }
+                            @if (name?.errors?.['minlength']) {
+                            Le nom doit contenir au moins 3 caractères
+                            }
+                            @if (name?.errors?.['maxlength']) {
+                            Le nom ne peut pas dépasser 100 caractères
+                            }
+                        </p>
+                        }
+                    </div>
+
+                    <!-- Difficulty Select -->
+                    <div class="space-y-2">
+                        <label z-form-label for="difficulty">
+                            Difficulté <span class="text-destructive">*</span>
+                        </label>
+                        <select z-input id="difficulty" formControlName="difficulty"
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
+                            @for (diff of difficulties; track diff.value) {
+                            <option [value]="diff.value">{{ diff.label }}</option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Visibility Select -->
+                    <div class="space-y-2">
+                        <label z-form-label for="visibility">
+                            Visibilité <span class="text-destructive">*</span>
+                        </label>
+                        <select z-input id="visibility" formControlName="visibility"
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
+                            @for (vis of visibilities; track vis.value) {
+                            <option [value]="vis.value">{{ vis.label }} - {{ vis.description }}</option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Max Participants Field -->
+                    <div class="space-y-2">
+                        <label z-form-label for="maxParticipants">
+                            Nombre maximum de participants (optionnel)
+                        </label>
+                        <input z-input id="maxParticipants" type="number" formControlName="max_participants"
+                            placeholder="Illimité par défaut" min="2" max="100"
+                            [class.border-destructive]="maxParticipants?.invalid && maxParticipants?.touched" />
+                        @if (maxParticipants?.invalid && maxParticipants?.touched) {
+                        <p class="text-sm text-destructive">
+                            @if (maxParticipants?.errors?.['min']) {
+                            Le minimum est de 2 participants
+                            }
+                            @if (maxParticipants?.errors?.['max']) {
+                            Le maximum est de 100 participants
+                            }
+                        </p>
+                        }
+                    </div>
+                </div>
+            </z-card>
+
+            <!-- Product Selection Card -->
+            <z-card class="p-6">
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                        <i class='bx bx-package'></i>
+                        Sélection des produits
+                    </h2>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                        Choisissez exactement 4 produits pour cette session.
+                        <span class="font-semibold text-primary">
+                            ({{ selectedProducts().length }}/4 sélectionnés)
+                        </span>
+                    </p>
+                </div>
+
+                <!-- Loading State -->
+                @if (loadingProducts()) {
+                <div class="text-center py-12">
+                    <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                    <p class="mt-4 text-gray-600 dark:text-gray-400">Chargement des produits...</p>
+                </div>
+                }
+
+                <!-- Products Grid -->
+                @if (!loadingProducts()) {
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    @for (product of products(); track product.id) {
+                    <div (click)="toggleProductSelection(product.id)"
+                        (keypress)="toggleProductSelection(product.id)"
+                        [attr.role]="'checkbox'"
+                        [attr.aria-checked]="isProductSelected(product.id)"
+                        [attr.tabindex]="0"
+                        [class.ring-2]="isProductSelected(product.id)"
+                        [class.ring-primary]="isProductSelected(product.id)"
+                        [class.bg-primary/5]="isProductSelected(product.id)"
+                        [class.opacity-50]="!canSelectMore() && !isProductSelected(product.id)"
+                        [class.cursor-not-allowed]="!canSelectMore() && !isProductSelected(product.id)"
+                        class="flex items-center gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:border-primary transition-all">
+                        <!-- Checkbox -->
+                        <div
+                            class="flex items-center justify-center w-6 h-6 rounded border-2 transition-colors"
+                            [class.border-primary]="isProductSelected(product.id)"
+                            [class.bg-primary]="isProductSelected(product.id)"
+                            [class.border-gray-300]="!isProductSelected(product.id)">
+                            @if (isProductSelected(product.id)) {
+                            <i class='bx bx-check text-white text-lg'></i>
+                            }
+                        </div>
+
+                        <!-- Product Image -->
+                        @if (product.image_url) {
+                        <img [src]="product.image_url" [alt]="product.name"
+                            class="w-16 h-16 object-cover rounded-lg bg-gray-100 dark:bg-gray-800" />
+                        } @else {
+                        <div
+                            class="w-16 h-16 flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-lg">
+                            <i class='bx bx-package text-3xl text-gray-400'></i>
+                        </div>
+                        }
+
+                        <!-- Product Info -->
+                        <div class="flex-1">
+                            <h3 class="font-semibold text-gray-900 dark:text-gray-100">{{ product.name }}</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">ID: {{ product.id }}</p>
+                        </div>
+                    </div>
+                    }
+                </div>
+                }
+
+                @if (!loadingProducts() && products().length === 0) {
+                <div class="text-center py-12">
+                    <i class='bx bx-package text-6xl text-gray-400 dark:text-gray-600 mb-4'></i>
+                    <p class="text-gray-600 dark:text-gray-400">Aucun produit disponible.</p>
+                </div>
+                }
+            </z-card>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-4 justify-end">
+                <a [routerLink]="['/sessions']" z-button zType="outline" [attr.disabled]="loading() ? true : null">
+                    Annuler
+                </a>
+                <button z-button type="submit" [zDisabled]="loading() || sessionForm.invalid || selectedProducts().length !== 4"
+                    [zLoading]="loading()">
+                    @if (loading()) {
+                    Création en cours...
+                    } @else {
+                    <i class='bx bx-plus-circle'></i>
+                    Créer la session
+                    }
+                </button>
+            </div>
+        </form>
+    </main>
+</div>
