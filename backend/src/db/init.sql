@@ -5,6 +5,10 @@
 \c angular;
 
 -- Drop existing tables and types (for clean init)
+DROP TABLE IF EXISTS messages CASCADE;
+DROP TABLE IF EXISTS session_invites CASCADE;
+DROP TABLE IF EXISTS friend_requests CASCADE;
+DROP TABLE IF EXISTS friendships CASCADE;
 DROP TABLE IF EXISTS answers CASCADE;
 DROP TABLE IF EXISTS participants CASCADE;
 DROP TABLE IF EXISTS session_products CASCADE;
@@ -15,6 +19,9 @@ DROP TABLE IF EXISTS users CASCADE;
 DROP TYPE IF EXISTS user_role CASCADE;
 DROP TYPE IF EXISTS session_status CASCADE;
 DROP TYPE IF EXISTS session_difficulty CASCADE;
+DROP TYPE IF EXISTS friend_request_status CASCADE;
+DROP TYPE IF EXISTS session_invite_status CASCADE;
+DROP TYPE IF EXISTS session_visibility CASCADE;
 
 -- ============================================
 -- ENUM Types
@@ -22,6 +29,9 @@ DROP TYPE IF EXISTS session_difficulty CASCADE;
 CREATE TYPE user_role AS ENUM ('user', 'admin');
 CREATE TYPE session_status AS ENUM ('active', 'completed', 'archived');
 CREATE TYPE session_difficulty AS ENUM ('easy', 'medium', 'hard');
+CREATE TYPE friend_request_status AS ENUM ('pending', 'accepted', 'rejected');
+CREATE TYPE session_invite_status AS ENUM ('pending', 'accepted', 'rejected');
+CREATE TYPE session_visibility AS ENUM ('public', 'private', 'friends_only');
 
 -- ============================================
 -- Table: users
@@ -58,7 +68,7 @@ CREATE TABLE products (
 
 -- ============================================
 -- Table: sessions
--- Une session de jeu créée par un administrateur
+-- Une session de jeu créée par un utilisateur ou administrateur
 -- ============================================
 CREATE TABLE sessions (
   id SERIAL PRIMARY KEY,
@@ -66,6 +76,8 @@ CREATE TABLE sessions (
   creator_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   status session_status DEFAULT 'active',
   difficulty session_difficulty DEFAULT 'medium',
+  visibility session_visibility DEFAULT 'public',
+  max_participants INTEGER DEFAULT 10,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -114,16 +126,88 @@ CREATE TABLE answers (
 );
 
 -- ============================================
+-- Table: friendships
+-- Stores accepted friend relationships (bidirectional)
+-- ============================================
+CREATE TABLE friendships (
+  id SERIAL PRIMARY KEY,
+  user_id_1 INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_id_2 INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  -- Ensure no duplicate friendships (order-independent)
+  CHECK (user_id_1 < user_id_2),
+  UNIQUE(user_id_1, user_id_2)
+);
+
+-- ============================================
+-- Table: friend_requests
+-- Pending friend requests
+-- ============================================
+CREATE TABLE friend_requests (
+  id SERIAL PRIMARY KEY,
+  sender_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  receiver_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status friend_request_status DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  -- Prevent sending request to yourself
+  CHECK (sender_id != receiver_id),
+  -- Only one pending request between two users
+  UNIQUE(sender_id, receiver_id)
+);
+
+-- ============================================
+-- Table: session_invites
+-- Invitations to private/friends_only sessions
+-- ============================================
+CREATE TABLE session_invites (
+  id SERIAL PRIMARY KEY,
+  session_id INTEGER NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+  inviter_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  invitee_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status session_invite_status DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  -- One invite per user per session
+  UNIQUE(session_id, invitee_id)
+);
+
+-- ============================================
+-- Table: messages
+-- Chat messages between friends
+-- ============================================
+CREATE TABLE messages (
+  id SERIAL PRIMARY KEY,
+  sender_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  receiver_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  read BOOLEAN DEFAULT false,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CHECK (sender_id != receiver_id)
+);
+
+-- ============================================
 -- Indexes pour optimiser les performances
 -- ============================================
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_username ON users(username);
 CREATE INDEX idx_sessions_creator ON sessions(creator_id);
 CREATE INDEX idx_sessions_status ON sessions(status);
+CREATE INDEX idx_sessions_visibility ON sessions(visibility);
 CREATE INDEX idx_session_products_session ON session_products(session_id);
 CREATE INDEX idx_participants_session ON participants(session_id);
 CREATE INDEX idx_participants_user ON participants(user_id);
 CREATE INDEX idx_answers_participant ON answers(participant_id);
+CREATE INDEX idx_friendships_user1 ON friendships(user_id_1);
+CREATE INDEX idx_friendships_user2 ON friendships(user_id_2);
+CREATE INDEX idx_friend_requests_sender ON friend_requests(sender_id);
+CREATE INDEX idx_friend_requests_receiver ON friend_requests(receiver_id);
+CREATE INDEX idx_friend_requests_status ON friend_requests(status);
+CREATE INDEX idx_session_invites_session ON session_invites(session_id);
+CREATE INDEX idx_session_invites_invitee ON session_invites(invitee_id);
+CREATE INDEX idx_session_invites_status ON session_invites(status);
+CREATE INDEX idx_messages_receiver ON messages(receiver_id);
+CREATE INDEX idx_messages_sender ON messages(sender_id);
 
 -- ============================================
 -- Données de test : Utilisateurs
@@ -226,6 +310,39 @@ INSERT INTO answers (participant_id, product_id, guessed_price, score) VALUES
   (4, 3, 280.00, 99);    -- AirPods (diff: 1)
 
 -- ============================================
+-- Mettre à jour la visibilité des sessions
+-- ============================================
+UPDATE sessions SET visibility = 'friends_only', max_participants = 5 WHERE id = 1;
+UPDATE sessions SET visibility = 'public' WHERE id = 2;
+UPDATE sessions SET visibility = 'private' WHERE id = 3;
+
+-- ============================================
+-- Données de test : Friendships
+-- ============================================
+-- Alice et Bob sont amis
+INSERT INTO friendships (user_id_1, user_id_2) VALUES (2, 3);
+-- Charlie et Diana sont amis
+INSERT INTO friendships (user_id_1, user_id_2) VALUES (4, 5);
+-- Bob et Charlie sont amis
+INSERT INTO friendships (user_id_1, user_id_2) VALUES (3, 4);
+
+-- ============================================
+-- Données de test : Friend Requests
+-- ============================================
+-- Diana a envoyé une demande à Alice (en attente)
+INSERT INTO friend_requests (sender_id, receiver_id, status) VALUES (5, 2, 'pending');
+-- Charlie a envoyé une demande à Alice (rejetée)
+INSERT INTO friend_requests (sender_id, receiver_id, status) VALUES (4, 2, 'rejected');
+
+-- ============================================
+-- Données de test : Session Invites
+-- ============================================
+-- Admin invite Bob à la session 3 (private)
+INSERT INTO session_invites (session_id, inviter_id, invitee_id, status) VALUES (3, 1, 3, 'pending');
+-- Admin invite Alice à la session 3 (acceptée)
+INSERT INTO session_invites (session_id, inviter_id, invitee_id, status) VALUES (3, 1, 2, 'accepted');
+
+-- ============================================
 -- Afficher les tables créées
 -- ============================================
 \dt
@@ -243,7 +360,15 @@ SELECT 'Session Products', COUNT(*) FROM session_products
 UNION ALL
 SELECT 'Participants', COUNT(*) FROM participants
 UNION ALL
-SELECT 'Answers', COUNT(*) FROM answers;
+SELECT 'Answers', COUNT(*) FROM answers
+UNION ALL
+SELECT 'Friendships', COUNT(*) FROM friendships
+UNION ALL
+SELECT 'Friend Requests', COUNT(*) FROM friend_requests
+UNION ALL
+SELECT 'Session Invites', COUNT(*) FROM session_invites
+UNION ALL
+SELECT 'Messages', COUNT(*) FROM messages;
 
 -- ============================================
 -- Classement mondial des joueurs
@@ -258,3 +383,27 @@ FROM users
 WHERE role = 'user'
 ORDER BY total_score DESC
 LIMIT 10;
+
+-- ============================================
+-- Vue helper: Liste des amis d'un utilisateur
+-- ============================================
+CREATE OR REPLACE VIEW user_friends AS
+SELECT 
+  user_id_1 as user_id,
+  user_id_2 as friend_id,
+  u.username as friend_username,
+  u.email as friend_email,
+  f.created_at
+FROM friendships f
+JOIN users u ON u.id = f.user_id_2
+UNION ALL
+SELECT 
+  user_id_2 as user_id,
+  user_id_1 as friend_id,
+  u.username as friend_username,
+  u.email as friend_email,
+  f.created_at
+FROM friendships f
+JOIN users u ON u.id = f.user_id_1;
+
+COMMENT ON VIEW user_friends IS 'Bidirectional view of friendships for easy querying';
