@@ -1,0 +1,94 @@
+<div class="min-h-screen bg-muted/50">
+    <!-- Header -->
+    <header class="bg-background border-b">
+        <div class="container mx-auto px-4 py-4">
+            <nav class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <img src="logo.svg" alt="Logo" class="w-10 h-10" />
+                    <div class="flex flex-col">
+                        <span class="text-2xl font-bold bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">
+                            Pi & Rho's Games
+                        </span>
+                        <span class="text-xs text-muted-foreground">Admin Dashboard</span>
+                    </div>
+                </div>
+
+                @if (currentUser) {
+                <div class="flex items-center gap-4">
+                    <app-theme-toggle />
+                    <a routerLink="/dashboard" z-button zType="ghost" class="text-sm">
+                        <i class='bx bx-user mr-2'></i>
+                        Vue Utilisateur
+                    </a>
+                    <span class="text-sm text-muted-foreground">
+                        <i class='bx bx-shield text-primary'></i>
+                        <span class="font-semibold text-foreground">{{ currentUser.username }}</span>
+                    </span>
+                    <button z-button zType="outline" (click)="logout()">
+                        <i class='bx bx-log-out mr-2'></i>
+                        Déconnexion
+                    </button>
+                </div>
+                }
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Welcome Section -->
+        <div class="mb-8">
+            <h1 class="text-4xl font-bold mb-2">
+                <i class='bx bx-dashboard mr-2'></i>
+                Dashboard Administrateur
+            </h1>
+            <p class="text-muted-foreground">Gérez votre plateforme et supervisez les activités</p>
+        </div>
+
+        <!-- Platform Stats -->
+        <div class="grid md:grid-cols-4 gap-6 mb-8">
+            @for (stat of platformStats; track stat.label) {
+            <z-card>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-muted-foreground mb-1">{{ stat.label }}</p>
+                        <p class="text-3xl font-bold">{{ stat.value }}</p>
+                    </div>
+                    <i class='bx {{ stat.icon }} text-4xl {{ stat.color }}'></i>
+                </div>
+            </z-card>
+            }
+        </div>
+
+        <!-- Management Sections -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold mb-4">Gestion de la Plateforme</h2>
+            <div class="grid md:grid-cols-2 gap-6">
+                @for (section of managementSections; track section.title) {
+                <z-card [zTitle]="section.title" [zDescription]="section.description">
+                    <button 
+                        z-button 
+                        class="w-full" 
+                        [zType]="section.available ? 'default' : 'outline'"
+                        [zDisabled]="!section.available">
+                        <i class='bx {{ section.icon }} mr-2'></i>
+                        {{ section.available ? 'Accéder' : 'Bientôt disponible' }}
+                    </button>
+                </z-card>
+                }
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <z-card [zTitle]="'Activité Récente'" [zDescription]="'Dernières actions sur la plateforme'">
+            <div class="space-y-4">
+                <!-- Placeholder pour activité récente -->
+                <div class="text-center py-12 text-muted-foreground">
+                    <i class='bx bx-time-five text-4xl mb-4'></i>
+                    <p>Aucune activité récente</p>
+                    <p class="text-sm mt-2">Les activités de la plateforme s'afficheront ici</p>
+                </div>
+            </div>
+        </z-card>
+    </main>
+</div>
