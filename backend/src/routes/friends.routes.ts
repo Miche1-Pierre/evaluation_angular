@@ -106,7 +106,8 @@ router.post(
 
       if (!receiver_email && !receiver_username && !receiver_id) {
         res.status(400).json({
-          error: "Vous devez fournir receiver_email, receiver_username ou receiver_id",
+          error:
+            "Vous devez fournir receiver_email, receiver_username ou receiver_id",
         });
         return;
       }
@@ -143,7 +144,9 @@ router.post(
       // Vérifier qu'on ne s'envoie pas une demande à soi-même
       if (senderId === receiverId) {
         await client.query("ROLLBACK");
-        res.status(400).json({ error: "Vous ne pouvez pas vous ajouter vous-même" });
+        res
+          .status(400)
+          .json({ error: "Vous ne pouvez pas vous ajouter vous-même" });
         return;
       }
 
