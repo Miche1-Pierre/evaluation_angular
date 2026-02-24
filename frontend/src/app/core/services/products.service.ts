@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 
 export interface Product {
   id: number;
+  theme_id: number;
   name: string;
   price: number;
   image_url: string | null;
@@ -12,12 +13,14 @@ export interface Product {
 }
 
 export interface CreateProductDTO {
+  theme_id: number;
   name: string;
   price: number;
   image_url?: string;
 }
 
 export interface UpdateProductDTO {
+  theme_id?: number;
   name?: string;
   price?: number;
   image_url?: string;

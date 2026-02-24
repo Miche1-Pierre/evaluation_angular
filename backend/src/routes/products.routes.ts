@@ -8,14 +8,27 @@ const router = Router();
 /**
  * GET /api/products
  * Liste tous les produits disponibles
+ * Query params:
+ *  - theme_id: Filtrer par thème (optionnel)
  */
-router.get("/", async (_req: Request, res: Response): Promise<void> => {
+router.get("/", async (req: Request, res: Response): Promise<void> => {
   try {
-    const result = await pool.query(
-      `SELECT id, name, price, image_url, created_at, updated_at
-       FROM products
-       ORDER BY name ASC`
-    );
+    const { theme_id } = req.query;
+
+    let query = `
+      SELECT id, theme_id, name, price, image_url, created_at, updated_at
+      FROM products
+    `;
+    const params: any[] = [];
+
+    if (theme_id) {
+      query += ` WHERE theme_id = $1`;
+      params.push(theme_id);
+    }
+
+    query += ` ORDER BY name ASC`;
+
+    const result = await pool.query(query, params);
 
     res.json(result.rows);
   } catch (error) {
@@ -33,7 +46,7 @@ router.get("/:id", async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
 
     const result = await pool.query(
-      `SELECT id, name, price, image_url, created_at, updated_at
+      `SELECT id, theme_id, name, price, image_url, created_at, updated_at
        FROM products
        WHERE id = $1`,
       [id]

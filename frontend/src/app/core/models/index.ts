@@ -19,10 +19,21 @@ export interface User {
 }
 
 // ============================================
-// Products
+// Products & Themes
 // ============================================
+export interface Theme {
+  id: number;
+  name: string;
+  description: string | null;
+  icon: string | null;
+  product_count?: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Product {
   id: number;
+  theme_id: number;
   name: string;
   price: number;
   image_url: string | null;

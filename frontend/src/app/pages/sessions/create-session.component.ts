@@ -1,9 +1,10 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ProductsService } from '../../core/services/products.service';
+import { ThemesService } from '../../core/services/themes.service';
 import { SessionsService } from '../../core/services/sessions.service';
-import { Product, SessionDifficulty, SessionVisibility } from '../../core/models';
+import { Product, Theme, SessionDifficulty, SessionVisibility } from '../../core/models';
 import { ZardButtonComponent } from '../../shared/components/button/button.component';
 import { ZardCardComponent } from '../../shared/components/card/card.component';
 import { ZardInputDirective } from '../../shared/components/input/input.directive';
@@ -29,13 +30,17 @@ export class CreateSessionComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
   private readonly productsService = inject(ProductsService);
+  private readonly themesService = inject(ThemesService);
   private readonly sessionsService = inject(SessionsService);
 
   sessionForm!: FormGroup;
+  themes = signal<Theme[]>([]);
   products = signal<Product[]>([]);
+  selectedThemeId = signal<number | 'random' | null>(null);
   selectedProducts = signal<number[]>([]);
   loading = signal(false);
-  loadingProducts = signal(true);
+  loadingThemes = signal(true);
+  loadingProducts = signal(false);
   error = signal<string | null>(null);
 
   readonly difficulties: { value: SessionDifficulty; label: string }[] = [
@@ -50,9 +55,16 @@ export class CreateSessionComponent implements OnInit {
     { value: 'friends_only', label: 'Amis uniquement', description: 'Visible et accessible par vos amis' },
   ];
 
+  // Computed signal pour savoir si on peut continuer
+  canProceedToProducts = computed(() => this.selectedThemeId() !== null);
+  canSubmit = computed(() => 
+    this.sessionForm?.valid && 
+    this.selectedProducts().length === 4
+  );
+
   ngOnInit(): void {
     this.initForm();
-    this.loadProducts();
+    this.loadThemes();
   }
 
   private initForm(): void {
@@ -64,7 +76,35 @@ export class CreateSessionComponent implements OnInit {
     });
   }
 
-  private loadProducts(): void {
+  private loadThemes(): void {
+    this.loadingThemes.set(true);
+    this.themesService.getThemes().subscribe({
+      next: (themes) => {
+        this.themes.set(themes);
+        this.loadingThemes.set(false);
+      },
+      error: (err) => {
+        console.error('Erreur lors du chargement des thèmes:', err);
+        this.error.set('Impossible de charger les thèmes. Veuillez réessayer.');
+        this.loadingThemes.set(false);
+      },
+    });
+  }
+
+  selectTheme(themeId: number | 'random'): void {
+    this.selectedThemeId.set(themeId);
+    this.selectedProducts.set([]); // Reset selected products
+    
+    if (themeId === 'random') {
+      // Pour random, charger tous les produits
+      this.loadAllProducts();
+    } else {
+      // Charger les produits du thème sélectionné
+      this.loadThemeProducts(themeId);
+    }
+  }
+
+  private loadAllProducts(): void {
     this.loadingProducts.set(true);
     this.productsService.getAllProducts().subscribe({
       next: (products) => {
@@ -74,6 +114,21 @@ export class CreateSessionComponent implements OnInit {
       error: (err) => {
         console.error('Erreur lors du chargement des produits:', err);
         this.error.set('Impossible de charger les produits. Veuillez réessayer.');
+        this.loadingProducts.set(false);
+      },
+    });
+  }
+
+  private loadThemeProducts(themeId: number): void {
+    this.loadingProducts.set(true);
+    this.themesService.getThemeProducts(themeId).subscribe({
+      next: (products) => {
+        this.products.set(products);
+        this.loadingProducts.set(false);
+      },
+      error: (err) => {
+        console.error('Erreur lors du chargement des produits:', err);
+        this.error.set('Impossible de charger les produits du thème. Veuillez réessayer.');
         this.loadingProducts.set(false);
       },
     });
@@ -98,6 +153,15 @@ export class CreateSessionComponent implements OnInit {
 
   canSelectMore(): boolean {
     return this.selectedProducts().length < 4;
+  }
+
+  getSelectedThemeName(): string {
+    const themeId = this.selectedThemeId();
+    if (themeId === 'random') return 'Aléatoire (tous les thèmes)';
+    if (themeId === null) return '';
+    
+    const theme = this.themes().find(t => t.id === themeId);
+    return theme?.name || '';
   }
 
   onSubmit(): void {
