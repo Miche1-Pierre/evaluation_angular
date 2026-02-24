@@ -26,6 +26,11 @@ export const routes: Routes = [
     canActivate: [authGuard, adminGuard]
   },
   {
+    path: 'leaderboard',
+    loadComponent: () => import('./pages/sessions/leaderboard.component').then(m => m.LeaderboardComponent),
+    canActivate: [authGuard]
+  },
+  {
     path: 'sessions/create',
     loadComponent: () => import('./pages/sessions/create-session.component').then(m => m.CreateSessionComponent),
     canActivate: [authGuard]
@@ -33,6 +38,11 @@ export const routes: Routes = [
   {
     path: 'sessions/:id/play',
     loadComponent: () => import('./pages/sessions/game-play.component').then(m => m.GamePlayComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'sessions/:id/leaderboard',
+    loadComponent: () => import('./pages/sessions/leaderboard.component').then(m => m.LeaderboardComponent),
     canActivate: [authGuard]
   },
   {
