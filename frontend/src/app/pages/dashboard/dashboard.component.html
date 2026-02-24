@@ -14,6 +14,12 @@
                 @if (currentUser) {
                 <div class="flex items-center gap-4">
                     <app-theme-toggle />
+                    @if (currentUser.role === 'admin') {
+                    <a routerLink="/admin" z-button zType="default" class="text-sm">
+                        <i class='bx bx-shield mr-2'></i>
+                        Admin
+                    </a>
+                    }
                     <span class="text-sm text-muted-foreground">
                         Bienvenue, <span class="font-semibold text-foreground">{{ currentUser.username }}</span>
                     </span>

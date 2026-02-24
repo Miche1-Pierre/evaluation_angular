@@ -9,7 +9,7 @@ import { ThemeToggleComponent } from '../../core/components/theme-toggle/theme-t
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, ZardButtonComponent, ZardCardComponent, ThemeToggleComponent],
+  imports: [CommonModule, RouterLink, ZardButtonComponent, ZardCardComponent, ThemeToggleComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'],
 })
