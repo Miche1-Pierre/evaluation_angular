@@ -702,6 +702,190 @@
                     }
                 }
             ]
+        },
+        {
+            "name": "📨 Invites",
+            "description": "Système d'invitations aux sessions privées",
+            "item": [
+                {
+                    "name": "Invite User to Session",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 201) {",
+                                    "    const response = pm.response.json();",
+                                    "    if (response.invite && response.invite.id) {",
+                                    "        pm.environment.set('inviteId', response.invite.id);",
+                                    "        console.log('Invitation envoyée, ID:', response.invite.id);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "POST",
+                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"invitee_email\": \"alice@test.com\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/sessions/{{sessionId}}/invite",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "sessions", "{{sessionId}}", "invite"]
+                        },
+                        "description": "Inviter un utilisateur à une session. Réservé au créateur ou admin. Auto-save de inviteId. Données test : Session 3 (private) créée par Admin."
+                    }
+                },
+                {
+                    "name": "Get My Invites (Received)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    const invites = pm.response.json();",
+                                    "    if (invites.length > 0) {",
+                                    "        const pendingInvites = invites.filter(i => i.status === 'pending');",
+                                    "        if (pendingInvites.length > 0) {",
+                                    "            pm.environment.set('inviteId', pendingInvites[0].id);",
+                                    "            console.log('Invitation pending de:', pendingInvites[0].inviter_username, '(ID:', pendingInvites[0].id, ')');",
+                                    "        }",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/invites",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "invites"]
+                        },
+                        "description": "Liste des invitations reçues. Données test : Admin a invité Alice à la session 3 (status=accepted), Bob à la session 3 (status=pending). Auto-save du premier inviteId pending."
+                    }
+                },
+                {
+                    "name": "Get Pending Invites Only",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/invites?status=pending",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "invites"],
+                            "query": [{"key": "status", "value": "pending"}]
+                        },
+                        "description": "Filtre uniquement les invitations en attente. Statuts disponibles : pending, accepted, rejected."
+                    }
+                },
+                {
+                    "name": "Get Sent Invites",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/invites/sent",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "invites", "sent"]
+                        },
+                        "description": "Liste des invitations envoyées par l'utilisateur connecté. Affiche tous les statuts."
+                    }
+                },
+                {
+                    "name": "Get Session Invites",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/sessions/{{sessionId}}/invites",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "sessions", "{{sessionId}}", "invites"]
+                        },
+                        "description": "Liste des invitations pour une session spécifique. Réservé au créateur ou admin."
+                    }
+                },
+                {
+                    "name": "Accept Invite",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/invites/{{inviteId}}/accept",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "invites", "{{inviteId}}", "accept"]
+                        },
+                        "description": "Accepter une invitation reçue. Rejoint automatiquement la session. Utilise {{inviteId}} auto-sauvegardé par 'Get My Invites'."
+                    }
+                },
+                {
+                    "name": "Reject Invite",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/invites/{{inviteId}}/reject",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "invites", "{{inviteId}}", "reject"]
+                        },
+                        "description": "Rejeter une invitation reçue. Utilise {{inviteId}} auto-sauvegardé."
+                    }
+                },
+                {
+                    "name": "Cancel/Delete Invite",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/invites/{{inviteId}}",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "invites", "{{inviteId}}"]
+                        },
+                        "description": "Annuler/supprimer une invitation. Réservé à l'inviter ou admin."
+                    }
+                }
+            ]
         }
     ],
     "variable": [
