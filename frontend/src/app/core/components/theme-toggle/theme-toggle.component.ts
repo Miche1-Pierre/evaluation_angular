@@ -14,7 +14,7 @@ import { ZardButtonComponent } from '../../../shared/components/button/button.co
       zSize="sm"
       (click)="toggleTheme()"
       [attr.aria-label]="isDark ? 'Activer le mode clair' : 'Activer le mode sombre'"
-      class="!p-2"
+      class="p-2!"
     >
       <i class="bx text-xl" [class]="isDark ? 'bx-sun' : 'bx-moon'"></i>
     </button>
