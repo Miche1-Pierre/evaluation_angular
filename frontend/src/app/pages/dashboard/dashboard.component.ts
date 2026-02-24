@@ -4,11 +4,12 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService, User } from '../../core/services/auth.service';
 import { ZardButtonComponent } from '../../shared/components/button/button.component';
 import { ZardCardComponent } from '../../shared/components/card/card.component';
+import { ThemeToggleComponent } from '../../core/components/theme-toggle/theme-toggle.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, ZardButtonComponent, ZardCardComponent],
+  imports: [CommonModule, ZardButtonComponent, ZardCardComponent, ThemeToggleComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'],
 })
