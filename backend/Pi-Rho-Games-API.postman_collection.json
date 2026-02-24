@@ -410,6 +410,161 @@
                     }
                 }
             ]
+        },
+        {
+            "name": "👥 Friends",
+            "description": "Système d'amis : demandes, acceptation, recherche",
+            "item": [
+                {
+                    "name": "Get Friends List",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/friends",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "friends"]
+                        }
+                    }
+                },
+                {
+                    "name": "Search Users",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/friends/search?q=bob",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "friends", "search"],
+                            "query": [{"key": "q", "value": "bob"}]
+                        }
+                    }
+                },
+                {
+                    "name": "Send Friend Request",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 201) {",
+                                    "    const response = pm.response.json();",
+                                    "    if (response.request && response.request.id) {",
+                                    "        pm.environment.set('friendRequestId', response.request.id);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "POST",
+                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"receiver_email\": \"bob@test.com\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/friends/request",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "friends", "request"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Pending Requests (Received)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/friends/requests",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "friends", "requests"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Sent Requests",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/friends/requests/sent",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "friends", "requests", "sent"]
+                        }
+                    }
+                },
+                {
+                    "name": "Accept Friend Request",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/friends/requests/{{friendRequestId}}/accept",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "friends", "requests", "{{friendRequestId}}", "accept"]
+                        }
+                    }
+                },
+                {
+                    "name": "Reject Friend Request",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/friends/requests/{{friendRequestId}}/reject",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "friends", "requests", "{{friendRequestId}}", "reject"]
+                        }
+                    }
+                },
+                {
+                    "name": "Remove Friend",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/friends/2",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "friends", "2"]
+                        }
+                    }
+                }
+            ]
         }
     ],
     "variable": [
