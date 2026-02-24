@@ -73,6 +73,99 @@
                     }
                 },
                 {
+                    "name": "Login Bob (User)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    const response = pm.response.json();",
+                                    "    pm.environment.set('token', response.token);",
+                                    "    pm.environment.set('userId', response.user.id);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"bob@test.com\",\n  \"password\": \"password123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/login",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "auth", "login"]
+                        }
+                    }
+                },
+                {
+                    "name": "Login Charlie (User)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    const response = pm.response.json();",
+                                    "    pm.environment.set('token', response.token);",
+                                    "    pm.environment.set('userId', response.user.id);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"charlie@test.com\",\n  \"password\": \"password123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/login",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "auth", "login"]
+                        }
+                    }
+                },
+                {
+                    "name": "Login Diana (User)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    const response = pm.response.json();",
+                                    "    pm.environment.set('token', response.token);",
+                                    "    pm.environment.set('userId', response.user.id);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"diana@test.com\",\n  \"password\": \"password123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/login",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "auth", "login"]
+                        }
+                    }
+                },
+                {
                     "name": "Login Admin",
                     "event": [
                         {
@@ -417,6 +510,23 @@
             "item": [
                 {
                     "name": "Get Friends List",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    const friends = pm.response.json();",
+                                    "    if (friends.length > 0) {",
+                                    "        pm.environment.set('friendId', friends[0].id);",
+                                    "        console.log('Premier ami:', friends[0].username, '(ID:', friends[0].id, ')');",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
                     "request": {
                         "auth": {
                             "type": "bearer",
@@ -428,7 +538,8 @@
                             "raw": "{{baseUrl}}/api/friends",
                             "host": ["{{baseUrl}}"],
                             "path": ["api", "friends"]
-                        }
+                        },
+                        "description": "Liste tous les amis de l'utilisateur connecté. Alice→Bob, Charlie→Diana, Bob→Charlie dans les données de test."
                     }
                 },
                 {
@@ -441,11 +552,12 @@
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{baseUrl}}/api/friends/search?q=bob",
+                            "raw": "{{baseUrl}}/api/friends/search?q=diana",
                             "host": ["{{baseUrl}}"],
                             "path": ["api", "friends", "search"],
-                            "query": [{"key": "q", "value": "bob"}]
-                        }
+                            "query": [{"key": "q", "value": "diana"}]
+                        },
+                        "description": "Rechercher des utilisateurs par nom ou email (min 2 caractères). Affiche is_friend et request_status (sent/received/null)."
                     }
                 },
                 {
@@ -459,6 +571,7 @@
                                     "    const response = pm.response.json();",
                                     "    if (response.request && response.request.id) {",
                                     "        pm.environment.set('friendRequestId', response.request.id);",
+                                    "        console.log('Demande envoyée, ID:', response.request.id);",
                                     "    }",
                                     "}"
                                 ],
@@ -475,17 +588,37 @@
                         "header": [{"key": "Content-Type", "value": "application/json"}],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"receiver_email\": \"bob@test.com\"\n}"
+                            "raw": "{\n  \"receiver_email\": \"diana@test.com\"\n}"
                         },
                         "url": {
                             "raw": "{{baseUrl}}/api/friends/request",
                             "host": ["{{baseUrl}}"],
                             "path": ["api", "friends", "request"]
-                        }
+                        },
+                        "description": "Envoyer une demande d'ami. Acceptation automatique si demande inverse existe. Testé : Alice → Diana (pas encore amies)."
                     }
                 },
                 {
                     "name": "Get Pending Requests (Received)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    const requests = pm.response.json();",
+                                    "    if (requests.length > 0) {",
+                                    "        pm.environment.set('friendRequestId', requests[0].id);",
+                                    "        console.log('Demande pending de:', requests[0].sender_username, '(ID:', requests[0].id, ')');",
+                                    "    } else {",
+                                    "        console.log('Aucune demande pending reçue');",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
                     "request": {
                         "auth": {
                             "type": "bearer",
@@ -497,7 +630,8 @@
                             "raw": "{{baseUrl}}/api/friends/requests",
                             "host": ["{{baseUrl}}"],
                             "path": ["api", "friends", "requests"]
-                        }
+                        },
+                        "description": "Demandes reçues en attente. Données test : Alice reçoit une demande de Diana (pending). Auto-save du premier ID."
                     }
                 },
                 {
@@ -529,7 +663,8 @@
                             "raw": "{{baseUrl}}/api/friends/requests/{{friendRequestId}}/accept",
                             "host": ["{{baseUrl}}"],
                             "path": ["api", "friends", "requests", "{{friendRequestId}}", "accept"]
-                        }
+                        },
+                        "description": "Accepter une demande reçue. Utilise {{friendRequestId}} auto-sauvegardé par 'Get Pending Requests'. Crée une amitié bidirectionnelle."
                     }
                 },
                 {
@@ -545,7 +680,8 @@
                             "raw": "{{baseUrl}}/api/friends/requests/{{friendRequestId}}/reject",
                             "host": ["{{baseUrl}}"],
                             "path": ["api", "friends", "requests", "{{friendRequestId}}", "reject"]
-                        }
+                        },
+                        "description": "Rejeter une demande reçue. Utilise {{friendRequestId}} auto-sauvegardé. Peut être réessayé par l'expéditeur plus tard."
                     }
                 },
                 {
@@ -558,10 +694,11 @@
                         "method": "DELETE",
                         "header": [],
                         "url": {
-                            "raw": "{{baseUrl}}/api/friends/2",
+                            "raw": "{{baseUrl}}/api/friends/{{friendId}}",
                             "host": ["{{baseUrl}}"],
-                            "path": ["api", "friends", "2"]
-                        }
+                            "path": ["api", "friends", "{{friendId}}"]
+                        },
+                        "description": "Supprimer un ami. Utilise {{friendId}} auto-sauvegardé par 'Get Friends List'. Ex: Si connecté en Alice, friendId=3 (Bob)."
                     }
                 }
             ]
