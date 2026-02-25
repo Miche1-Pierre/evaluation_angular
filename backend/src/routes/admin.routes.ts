@@ -97,17 +97,19 @@ router.get('/sessions/recent', authMiddleware, requireAdmin, async (req: AuthReq
         s.id,
         s.name,
         s.status,
-        s.max_players,
+        s.max_participants,
         s.created_at,
         s.updated_at,
         u.username as creator_name,
         t.name as theme_name,
         t.icon as theme_icon,
-        COUNT(DISTINCT sp.user_id) as player_count
+        COUNT(DISTINCT p.user_id) as player_count
       FROM sessions s
       LEFT JOIN users u ON s.creator_id = u.id
-      LEFT JOIN themes t ON s.theme_id = t.id
-      LEFT JOIN session_participants sp ON s.id = sp.session_id
+      LEFT JOIN participants p ON s.id = p.session_id
+      LEFT JOIN session_products sp ON s.id = sp.session_id
+      LEFT JOIN products pr ON sp.product_id = pr.id
+      LEFT JOIN themes t ON pr.theme_id = t.id
       GROUP BY s.id, u.username, t.name, t.icon
       ORDER BY s.created_at DESC
       LIMIT $1`,

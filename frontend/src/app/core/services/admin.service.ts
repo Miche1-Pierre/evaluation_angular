@@ -26,7 +26,7 @@ export interface RecentSession {
   id: number;
   name: string;
   status: string;
-  max_players: number;
+  max_participants: number;
   created_at: string;
   updated_at: string;
   creator_name: string;
