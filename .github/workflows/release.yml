@@ -1,255 +1,255 @@
 name: Release Management
 
 on:
-  push:
-    branches:
-      - main
-      - develop
-  workflow_dispatch:
-    inputs:
-      version_type:
-        description: 'Type de version à créer'
-        required: true
-        default: 'patch'
-        type: choice
-        options:
-          - major
-          - minor
-          - patch
-          - premajor
-          - preminor
-          - prepatch
+    push:
+        branches:
+            - main
+            - develop
+    workflow_dispatch:
+        inputs:
+            version_type:
+                description: "Type de version à créer"
+                required: true
+                default: "patch"
+                type: choice
+                options:
+                    - major
+                    - minor
+                    - patch
+                    - premajor
+                    - preminor
+                    - prepatch
 
 permissions:
-  contents: write
-  packages: write
-  pull-requests: write
+    contents: write
+    packages: write
+    pull-requests: write
 
 jobs:
-  # ============================================
-  # Déterminer si une release est nécessaire
-  # ============================================
-  check-release:
-    runs-on: ubuntu-latest
-    outputs:
-      should_release: ${{ steps.check.outputs.should_release }}
-      version: ${{ steps.check.outputs.version }}
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+    # ============================================
+    # Déterminer si une release est nécessaire
+    # ============================================
+    check-release:
+        runs-on: ubuntu-latest
+        outputs:
+            should_release: ${{ steps.check.outputs.should_release }}
+            version: ${{ steps.check.outputs.version }}
 
-      - name: Check for releasable commits
-        id: check
-        run: |
-          # Vérifier s'il y a des commits avec feat: fix: ou BREAKING CHANGE depuis le dernier tag
-          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          
-          if [ -z "$LAST_TAG" ]; then
-            echo "should_release=true" >> $GITHUB_OUTPUT
-            echo "version=0.1.0" >> $GITHUB_OUTPUT
-            echo "First release detected"
-          else
-            COMMITS=$(git log $LAST_TAG..HEAD --pretty=format:"%s")
-            if echo "$COMMITS" | grep -qE "^(feat|fix|perf|BREAKING CHANGE)"; then
-              echo "should_release=true" >> $GITHUB_OUTPUT
-              echo "Releasable commits found"
-            else
-              echo "should_release=false" >> $GITHUB_OUTPUT
-              echo "No releasable commits"
-            fi
-          fi
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
 
-  # ============================================
-  # Créer la release avec semantic versioning
-  # ============================================
-  create-release:
-    runs-on: ubuntu-latest
-    needs: check-release
-    if: needs.check-release.outputs.should_release == 'true' || github.event_name == 'workflow_dispatch'
-    outputs:
-      version: ${{ steps.semver.outputs.version }}
-      changelog: ${{ steps.changelog.outputs.changelog }}
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+            - name: Check for releasable commits
+              id: check
+              run: |
+                  # Vérifier s'il y a des commits avec feat: fix: ou BREAKING CHANGE depuis le dernier tag
+                  LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
+                  if [ -z "$LAST_TAG" ]; then
+                    echo "should_release=true" >> $GITHUB_OUTPUT
+                    echo "version=0.1.0" >> $GITHUB_OUTPUT
+                    echo "First release detected"
+                  else
+                    COMMITS=$(git log $LAST_TAG..HEAD --pretty=format:"%s")
+                    if echo "$COMMITS" | grep -qE "^(feat|fix|perf|BREAKING CHANGE)"; then
+                      echo "should_release=true" >> $GITHUB_OUTPUT
+                      echo "Releasable commits found"
+                    else
+                      echo "should_release=false" >> $GITHUB_OUTPUT
+                      echo "No releasable commits"
+                    fi
+                  fi
 
-      - name: Configure Git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+    # ============================================
+    # Créer la release avec semantic versioning
+    # ============================================
+    create-release:
+        runs-on: ubuntu-latest
+        needs: check-release
+        if: needs.check-release.outputs.should_release == 'true' || github.event_name == 'workflow_dispatch'
+        outputs:
+            version: ${{ steps.semver.outputs.version }}
+            changelog: ${{ steps.changelog.outputs.changelog }}
 
-      - name: Get last tag
-        id: get-last-tag
-        run: |
-          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-          echo "last_tag=$LAST_TAG" >> $GITHUB_OUTPUT
-          echo "Last tag: $LAST_TAG"
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
 
-      - name: Calculate next version (Semantic Versioning)
-        id: semver
-        run: |
-          LAST_TAG="${{ steps.get-last-tag.outputs.last_tag }}"
-          VERSION=${LAST_TAG#v}
-          
-          # Extraire major.minor.patch
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
-          
-          # Analyser les commits depuis le dernier tag
-          COMMITS=$(git log $LAST_TAG..HEAD --pretty=format:"%s" 2>/dev/null || git log --pretty=format:"%s")
-          
-          # Détecter les breaking changes
-          if echo "$COMMITS" | grep -qE "^BREAKING CHANGE|^.*!:"; then
-            MAJOR=$((MAJOR + 1))
-            MINOR=0
-            PATCH=0
-            echo "type=major" >> $GITHUB_OUTPUT
-          # Détecter les nouvelles features
-          elif echo "$COMMITS" | grep -qE "^feat"; then
-            MINOR=$((MINOR + 1))
-            PATCH=0
-            echo "type=minor" >> $GITHUB_OUTPUT
-          # Détecter les fixes et autres
-          elif echo "$COMMITS" | grep -qE "^fix|^perf"; then
-            PATCH=$((PATCH + 1))
-            echo "type=patch" >> $GITHUB_OUTPUT
-          else
-            PATCH=$((PATCH + 1))
-            echo "type=patch" >> $GITHUB_OUTPUT
-          fi
-          
-          # Override si workflow_dispatch
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            case "${{ github.event.inputs.version_type }}" in
-              major)
-                MAJOR=$((MAJOR + 1))
-                MINOR=0
-                PATCH=0
-                ;;
-              minor)
-                MINOR=$((MINOR + 1))
-                PATCH=0
-                ;;
-              patch)
-                PATCH=$((PATCH + 1))
-                ;;
-            esac
-          fi
-          
-          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
-          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "version_tag=v$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "Next version: v$NEW_VERSION"
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "22"
 
-      - name: Generate Changelog
-        id: changelog
-        run: |
-          LAST_TAG="${{ steps.get-last-tag.outputs.last_tag }}"
-          NEW_VERSION="v${{ steps.semver.outputs.version }}"
-          
-          echo "# 🚀 Release $NEW_VERSION" > CHANGELOG_TEMP.md
-          echo "" >> CHANGELOG_TEMP.md
-          echo "## 📅 $(date +'%Y-%m-%d')" >> CHANGELOG_TEMP.md
-          echo "" >> CHANGELOG_TEMP.md
-          
-          # Features
-          FEATURES=$(git log $LAST_TAG..HEAD --pretty=format:"- %s (%h)" --grep="^feat" 2>/dev/null || echo "")
-          if [ -n "$FEATURES" ]; then
-            echo "### ✨ Features" >> CHANGELOG_TEMP.md
-            echo "$FEATURES" >> CHANGELOG_TEMP.md
-            echo "" >> CHANGELOG_TEMP.md
-          fi
-          
-          # Fixes
-          FIXES=$(git log $LAST_TAG..HEAD --pretty=format:"- %s (%h)" --grep="^fix" 2>/dev/null || echo "")
-          if [ -n "$FIXES" ]; then
-            echo "### 🐛 Bug Fixes" >> CHANGELOG_TEMP.md
-            echo "$FIXES" >> CHANGELOG_TEMP.md
-            echo "" >> CHANGELOG_TEMP.md
-          fi
-          
-          # Performance
-          PERF=$(git log $LAST_TAG..HEAD --pretty=format:"- %s (%h)" --grep="^perf" 2>/dev/null || echo "")
-          if [ -n "$PERF" ]; then
-            echo "### ⚡ Performance" >> CHANGELOG_TEMP.md
-            echo "$PERF" >> CHANGELOG_TEMP.md
-            echo "" >> CHANGELOG_TEMP.md
-          fi
-          
-          # Breaking Changes
-          BREAKING=$(git log $LAST_TAG..HEAD --pretty=format:"- %s (%h)" --grep="BREAKING CHANGE" 2>/dev/null || echo "")
-          if [ -n "$BREAKING" ]; then
-            echo "### ⚠️ BREAKING CHANGES" >> CHANGELOG_TEMP.md
-            echo "$BREAKING" >> CHANGELOG_TEMP.md
-            echo "" >> CHANGELOG_TEMP.md
-          fi
-          
-          # Documentation
-          DOCS=$(git log $LAST_TAG..HEAD --pretty=format:"- %s (%h)" --grep="^docs" 2>/dev/null || echo "")
-          if [ -n "$DOCS" ]; then
-            echo "### 📝 Documentation" >> CHANGELOG_TEMP.md
-            echo "$DOCS" >> CHANGELOG_TEMP.md
-            echo "" >> CHANGELOG_TEMP.md
-          fi
-          
-          # Autres changements
-          OTHERS=$(git log $LAST_TAG..HEAD --pretty=format:"- %s (%h)" --grep="^chore\|^style\|^refactor\|^test\|^build\|^ci" 2>/dev/null || echo "")
-          if [ -n "$OTHERS" ]; then
-            echo "### 🔧 Other Changes" >> CHANGELOG_TEMP.md
-            echo "$OTHERS" >> CHANGELOG_TEMP.md
-            echo "" >> CHANGELOG_TEMP.md
-          fi
-          
-          # Images Docker
-          echo "### 🐳 Docker Images" >> CHANGELOG_TEMP.md
-          echo "" >> CHANGELOG_TEMP.md
-          echo "\`\`\`bash" >> CHANGELOG_TEMP.md
-          echo "# Frontend" >> CHANGELOG_TEMP.md
-          echo "docker pull ghcr.io/${{ github.repository }}/frontend:$NEW_VERSION" >> CHANGELOG_TEMP.md
-          echo "" >> CHANGELOG_TEMP.md
-          echo "# Backend" >> CHANGELOG_TEMP.md
-          echo "docker pull ghcr.io/${{ github.repository }}/backend:$NEW_VERSION" >> CHANGELOG_TEMP.md
-          echo "\`\`\`" >> CHANGELOG_TEMP.md
-          
-          # Sauvegarder pour la release
-          cat CHANGELOG_TEMP.md
-          {
-            echo 'changelog<<EOF'
-            cat CHANGELOG_TEMP.md
-            echo EOF
-          } >> $GITHUB_OUTPUT
+            - name: Configure Git
+              run: |
+                  git config user.name "github-actions[bot]"
+                  git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Create Git Tag
-        run: |
-          git tag -a "v${{ steps.semver.outputs.version }}" -m "Release v${{ steps.semver.outputs.version }}"
-          git push origin "v${{ steps.semver.outputs.version }}"
+            - name: Get last tag
+              id: get-last-tag
+              run: |
+                  LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+                  echo "last_tag=$LAST_TAG" >> $GITHUB_OUTPUT
+                  echo "Last tag: $LAST_TAG"
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: v${{ steps.semver.outputs.version }}
-          name: Release v${{ steps.semver.outputs.version }}
-          body: ${{ steps.changelog.outputs.changelog }}
-          draft: false
-          prerelease: false
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            - name: Calculate next version (Semantic Versioning)
+              id: semver
+              run: |
+                  LAST_TAG="${{ steps.get-last-tag.outputs.last_tag }}"
+                  VERSION=${LAST_TAG#v}
 
-  # ============================================
-  # Build et publier les images Docker
-  # ============================================
-  build-and-publish:
-    needs: create-release
-    uses: ./.github/workflows/docker-publish.yml
-    secrets: inherit
+                  # Extraire major.minor.patch
+                  IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+
+                  # Analyser les commits depuis le dernier tag
+                  COMMITS=$(git log $LAST_TAG..HEAD --pretty=format:"%s" 2>/dev/null || git log --pretty=format:"%s")
+
+                  # Détecter les breaking changes
+                  if echo "$COMMITS" | grep -qE "^BREAKING CHANGE|^.*!:"; then
+                    MAJOR=$((MAJOR + 1))
+                    MINOR=0
+                    PATCH=0
+                    echo "type=major" >> $GITHUB_OUTPUT
+                  # Détecter les nouvelles features
+                  elif echo "$COMMITS" | grep -qE "^feat"; then
+                    MINOR=$((MINOR + 1))
+                    PATCH=0
+                    echo "type=minor" >> $GITHUB_OUTPUT
+                  # Détecter les fixes et autres
+                  elif echo "$COMMITS" | grep -qE "^fix|^perf"; then
+                    PATCH=$((PATCH + 1))
+                    echo "type=patch" >> $GITHUB_OUTPUT
+                  else
+                    PATCH=$((PATCH + 1))
+                    echo "type=patch" >> $GITHUB_OUTPUT
+                  fi
+
+                  # Override si workflow_dispatch
+                  if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+                    case "${{ github.event.inputs.version_type }}" in
+                      major)
+                        MAJOR=$((MAJOR + 1))
+                        MINOR=0
+                        PATCH=0
+                        ;;
+                      minor)
+                        MINOR=$((MINOR + 1))
+                        PATCH=0
+                        ;;
+                      patch)
+                        PATCH=$((PATCH + 1))
+                        ;;
+                    esac
+                  fi
+
+                  NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+                  echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+                  echo "version_tag=v$NEW_VERSION" >> $GITHUB_OUTPUT
+                  echo "Next version: v$NEW_VERSION"
+
+            - name: Generate Changelog
+              id: changelog
+              run: |
+                  LAST_TAG="${{ steps.get-last-tag.outputs.last_tag }}"
+                  NEW_VERSION="v${{ steps.semver.outputs.version }}"
+
+                  echo "# 🚀 Release $NEW_VERSION" > CHANGELOG_TEMP.md
+                  echo "" >> CHANGELOG_TEMP.md
+                  echo "## 📅 $(date +'%Y-%m-%d')" >> CHANGELOG_TEMP.md
+                  echo "" >> CHANGELOG_TEMP.md
+
+                  # Features
+                  FEATURES=$(git log $LAST_TAG..HEAD --pretty=format:"- %s (%h)" --grep="^feat" 2>/dev/null || echo "")
+                  if [ -n "$FEATURES" ]; then
+                    echo "### ✨ Features" >> CHANGELOG_TEMP.md
+                    echo "$FEATURES" >> CHANGELOG_TEMP.md
+                    echo "" >> CHANGELOG_TEMP.md
+                  fi
+
+                  # Fixes
+                  FIXES=$(git log $LAST_TAG..HEAD --pretty=format:"- %s (%h)" --grep="^fix" 2>/dev/null || echo "")
+                  if [ -n "$FIXES" ]; then
+                    echo "### 🐛 Bug Fixes" >> CHANGELOG_TEMP.md
+                    echo "$FIXES" >> CHANGELOG_TEMP.md
+                    echo "" >> CHANGELOG_TEMP.md
+                  fi
+
+                  # Performance
+                  PERF=$(git log $LAST_TAG..HEAD --pretty=format:"- %s (%h)" --grep="^perf" 2>/dev/null || echo "")
+                  if [ -n "$PERF" ]; then
+                    echo "### ⚡ Performance" >> CHANGELOG_TEMP.md
+                    echo "$PERF" >> CHANGELOG_TEMP.md
+                    echo "" >> CHANGELOG_TEMP.md
+                  fi
+
+                  # Breaking Changes
+                  BREAKING=$(git log $LAST_TAG..HEAD --pretty=format:"- %s (%h)" --grep="BREAKING CHANGE" 2>/dev/null || echo "")
+                  if [ -n "$BREAKING" ]; then
+                    echo "### ⚠️ BREAKING CHANGES" >> CHANGELOG_TEMP.md
+                    echo "$BREAKING" >> CHANGELOG_TEMP.md
+                    echo "" >> CHANGELOG_TEMP.md
+                  fi
+
+                  # Documentation
+                  DOCS=$(git log $LAST_TAG..HEAD --pretty=format:"- %s (%h)" --grep="^docs" 2>/dev/null || echo "")
+                  if [ -n "$DOCS" ]; then
+                    echo "### 📝 Documentation" >> CHANGELOG_TEMP.md
+                    echo "$DOCS" >> CHANGELOG_TEMP.md
+                    echo "" >> CHANGELOG_TEMP.md
+                  fi
+
+                  # Autres changements
+                  OTHERS=$(git log $LAST_TAG..HEAD --pretty=format:"- %s (%h)" --grep="^chore\|^style\|^refactor\|^test\|^build\|^ci" 2>/dev/null || echo "")
+                  if [ -n "$OTHERS" ]; then
+                    echo "### 🔧 Other Changes" >> CHANGELOG_TEMP.md
+                    echo "$OTHERS" >> CHANGELOG_TEMP.md
+                    echo "" >> CHANGELOG_TEMP.md
+                  fi
+
+                  # Images Docker
+                  echo "### 🐳 Docker Images" >> CHANGELOG_TEMP.md
+                  echo "" >> CHANGELOG_TEMP.md
+                  echo "\`\`\`bash" >> CHANGELOG_TEMP.md
+                  echo "# Frontend" >> CHANGELOG_TEMP.md
+                  echo "docker pull ghcr.io/${{ github.repository }}/frontend:$NEW_VERSION" >> CHANGELOG_TEMP.md
+                  echo "" >> CHANGELOG_TEMP.md
+                  echo "# Backend" >> CHANGELOG_TEMP.md
+                  echo "docker pull ghcr.io/${{ github.repository }}/backend:$NEW_VERSION" >> CHANGELOG_TEMP.md
+                  echo "\`\`\`" >> CHANGELOG_TEMP.md
+
+                  # Sauvegarder pour la release
+                  cat CHANGELOG_TEMP.md
+                  {
+                    echo 'changelog<<EOF'
+                    cat CHANGELOG_TEMP.md
+                    echo EOF
+                  } >> $GITHUB_OUTPUT
+
+            - name: Create Git Tag
+              run: |
+                  git tag -a "v${{ steps.semver.outputs.version }}" -m "Release v${{ steps.semver.outputs.version }}"
+                  git push origin "v${{ steps.semver.outputs.version }}"
+
+            - name: Create GitHub Release
+              uses: softprops/action-gh-release@v1
+              with:
+                  tag_name: v${{ steps.semver.outputs.version }}
+                  name: Release v${{ steps.semver.outputs.version }}
+                  body: ${{ steps.changelog.outputs.changelog }}
+                  draft: false
+                  prerelease: false
+                  generate_release_notes: true
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    # ============================================
+    # Build et publier les images Docker
+    # ============================================
+    build-and-publish:
+        needs: create-release
+        uses: ./.github/workflows/docker-publish.yml
+        secrets: inherit

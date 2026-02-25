@@ -75,6 +75,77 @@ async function fetchAllProducts(): Promise<DummyProduct[]> {
 }
 
 /**
+ * Crée des variations d'un produit pour enrichir le catalogue
+ */
+function createProductVariations(product: DummyProduct, count: number): DummyProduct[] {
+  const variations: DummyProduct[] = [product];
+  
+  const prefixes = ['Premium', 'Deluxe', 'Pro', 'Elite', 'Classic', 'Modern', 'Vintage', 'Smart', 'Ultra', 'Super'];
+  const suffixes = ['Plus', 'Max', 'Mini', 'Lite', 'Pro', 'XL', 'Edition', 'Special', 'Advanced', 'Ultimate'];
+  const priceMultipliers = [0.8, 0.9, 1.1, 1.2, 1.3, 1.5, 0.7, 1.4];
+  
+  for (let i = 1; i < count; i++) {
+    const variation: DummyProduct = {
+      ...product,
+      id: product.id * 1000 + i, // ID unique
+      title: i % 2 === 0 
+        ? `${prefixes[i % prefixes.length]} ${product.title}`
+        : `${product.title} ${suffixes[i % suffixes.length]}`,
+      price: parseFloat((product.price * priceMultipliers[i % priceMultipliers.length]).toFixed(2)),
+      description: product.description // Garde la même description
+    };
+    variations.push(variation);
+  }
+  
+  return variations;
+}
+
+/**
+ * Enrichit les catégories qui ont peu de produits
+ */
+function enrichProducts(products: DummyProduct[], minProductsPerCategory: number = 15): DummyProduct[] {
+  // Grouper par catégorie
+  const byCategory: Record<string, DummyProduct[]> = {};
+  products.forEach(p => {
+    if (!byCategory[p.category]) {
+      byCategory[p.category] = [];
+    }
+    byCategory[p.category].push(p);
+  });
+  
+  const enrichedProducts: DummyProduct[] = [];
+  
+  console.log('\n🔄 Enrichissement des catégories...');
+  
+  Object.entries(byCategory).forEach(([category, categoryProducts]) => {
+    const currentCount = categoryProducts.length;
+    
+    if (currentCount < minProductsPerCategory) {
+      console.log(`   ${category}: ${currentCount} produits → ajout de ${minProductsPerCategory - currentCount} variations`);
+      
+      // Ajouter les produits originaux
+      enrichedProducts.push(...categoryProducts);
+      
+      // Calculer combien de produits manquent
+      const needed = minProductsPerCategory - currentCount;
+      const variationsPerProduct = Math.ceil(needed / currentCount);
+      
+      // Créer des variations
+      categoryProducts.forEach(product => {
+        const variations = createProductVariations(product, variationsPerProduct + 1);
+        // Skip le premier (original déjà ajouté) et ajouter les variations
+        enrichedProducts.push(...variations.slice(1));
+      });
+    } else {
+      console.log(`   ${category}: ${currentCount} produits ✓`);
+      enrichedProducts.push(...categoryProducts);
+    }
+  });
+  
+  return enrichedProducts;
+}
+
+/**
  * Supprime les anciens produits
  */
 async function clearProducts() {
@@ -94,11 +165,15 @@ async function seedProducts() {
     console.log(`✅ ${themeMap.size} themes chargés\n`);
     
     // 2. Récupérer tous les produits de l'API
-    const products = await fetchAllProducts();
-    console.log(`✅ ${products.length} produits récupérés\n`);
+    const baseProducts = await fetchAllProducts();
+    console.log(`✅ ${baseProducts.length} produits récupérés\n`);
     
-    // 3. Filtrer et mapper vers nos thèmes
-    const mappedProducts = products
+    // 3. Enrichir les catégories qui ont peu de produits
+    const enrichedProducts = enrichProducts(baseProducts, 15);
+    console.log(`✅ ${enrichedProducts.length} produits après enrichissement\n`);
+    
+    // 4. Filtrer et mapper vers nos thèmes
+    const mappedProducts = enrichedProducts
       .filter(p => themeMap.has(p.category)) // Garder uniquement les catégories qui existent en theme
       .map(p => ({
         themeId: themeMap.get(p.category)!,
@@ -110,7 +185,7 @@ async function seedProducts() {
     
     console.log(`🎯 ${mappedProducts.length} produits mappés vers les themes\n`);
     
-    // 4. Compter par thème
+    // 5. Compter par thème
     const countByTheme: Record<number, number> = {};
     mappedProducts.forEach(p => {
       countByTheme[p.themeId] = (countByTheme[p.themeId] || 0) + 1;
@@ -124,10 +199,10 @@ async function seedProducts() {
       });
     console.log();
     
-    // 5. Supprimer les anciens produits
+    // 6. Supprimer les anciens produits
     await clearProducts();
     
-    // 6. Insérer les nouveaux produits
+    // 7. Insérer les nouveaux produits
     console.log('💾 Insertion des produits dans la base de données...');
     
     for (const product of mappedProducts) {
@@ -139,7 +214,7 @@ async function seedProducts() {
     
     console.log(`✅ ${mappedProducts.length} produits insérés avec succès!\n`);
     
-    // 7. Vérification finale
+    // 8. Vérification finale
     const result = await pool.query(`
       SELECT t.name as theme_name, COUNT(p.*) as product_count
       FROM themes t
