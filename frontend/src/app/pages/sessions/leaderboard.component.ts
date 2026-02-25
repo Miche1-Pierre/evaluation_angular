@@ -64,18 +64,20 @@ export class LeaderboardComponent implements OnInit {
 
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
+      // Mode: Leaderboard d'une session spécifique
       this.sessionId.set(Number(id));
+      this.activeTab.set('session');
       this.loadSession();
       this.loadSessionLeaderboard();
+      // Précharger les autres onglets en arrière-plan
+      this.loadGlobalLeaderboard();
+      this.loadFriendsLeaderboard();
     } else {
-      // Mode leaderboard global sans session spécifique
+      // Mode: Leaderboard global (pas de session spécifique)
       this.activeTab.set('global');
       this.loadGlobalLeaderboard();
+      this.loadFriendsLeaderboard();
     }
-
-    // Charger aussi les autres onglets
-    this.loadGlobalLeaderboard();
-    this.loadFriendsLeaderboard();
   }
 
   private loadSession(): void {
@@ -111,29 +113,75 @@ export class LeaderboardComponent implements OnInit {
   }
 
   private loadGlobalLeaderboard(): void {
+    // Si l'onglet actif est global, afficher le loading
+    if (this.activeTab() === 'global') {
+      this.loading.set(true);
+    }
+    
     this.gameService.getGlobalLeaderboard(50).subscribe({
       next: (leaderboard) => {
         this.globalLeaderboard.set(leaderboard);
+        if (this.activeTab() === 'global') {
+          this.loading.set(false);
+        }
       },
       error: (err) => {
         console.error('Erreur lors du chargement du classement global:', err);
+        this.error.set('Impossible de charger le classement global.');
+        if (this.activeTab() === 'global') {
+          this.loading.set(false);
+        }
       },
     });
   }
 
   private loadFriendsLeaderboard(): void {
+    // Si l'onglet actif est friends, afficher le loading
+    if (this.activeTab() === 'friends') {
+      this.loading.set(true);
+    }
+    
     this.gameService.getFriendsLeaderboard().subscribe({
       next: (leaderboard) => {
         this.friendsLeaderboard.set(leaderboard);
+        if (this.activeTab() === 'friends') {
+          this.loading.set(false);
+        }
       },
       error: (err) => {
         console.error('Erreur lors du chargement du classement amis:', err);
+        this.error.set('Impossible de charger le classement entre amis.');
+        if (this.activeTab() === 'friends') {
+          this.loading.set(false);
+        }
       },
     });
   }
 
   setActiveTab(tab: LeaderboardTab): void {
     this.activeTab.set(tab);
+    this.error.set(null);
+    
+    // Gérer le chargement selon l'onglet sélectionné
+    if (tab === 'global') {
+      if (this.globalLeaderboard().length === 0) {
+        this.loadGlobalLeaderboard();
+      } else {
+        this.loading.set(false);
+      }
+    } else if (tab === 'friends') {
+      if (this.friendsLeaderboard().length === 0) {
+        this.loadFriendsLeaderboard();
+      } else {
+        this.loading.set(false);
+      }
+    } else if (tab === 'session') {
+      if (this.sessionLeaderboard().length === 0) {
+        this.loadSessionLeaderboard();
+      } else {
+        this.loading.set(false);
+      }
+    }
   }
 
   getRankColor(rank: number): 'default' | 'secondary' | 'destructive' | 'outline' {

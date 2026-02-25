@@ -22,7 +22,7 @@
                 <div class="flex items-center gap-3">
                     <app-theme-toggle />
                     @if (sessionId()) {
-                    <a [routerLink]="['/sessions', sessionId()]" z-button zType="outline" zSize="sm">
+                    <a [routerLink]="['/sessions', sessionId(), 'play']" z-button zType="outline" zSize="sm">
                         <i class='bx bx-arrow-back'></i>
                         Retour à la session
                     </a>
