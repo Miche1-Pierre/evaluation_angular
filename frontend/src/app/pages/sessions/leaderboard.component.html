@@ -1,0 +1,249 @@
+<div class="min-h-screen bg-muted/50">
+    <!-- Header -->
+    <header
+        class="bg-background border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <img src="/logo.svg" alt="Logo" class="h-10 w-10" />
+                    <div>
+                        <h1
+                            class="text-2xl font-bold bg-linear-to-r from-primary to-orange-500 bg-clip-text text-transparent">
+                            <i class='bx bx-trophy'></i>
+                            Classements
+                        </h1>
+                        @if (sessionName()) {
+                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                            {{ sessionName() }}
+                        </p>
+                        }
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <app-theme-toggle />
+                    @if (sessionId()) {
+                    <a [routerLink]="['/sessions', sessionId(), 'play']" z-button zType="outline" zSize="sm">
+                        <i class='bx bx-arrow-back'></i>
+                        Retour à la session
+                    </a>
+                    } @else {
+                    <a [routerLink]="['/sessions']" z-button zType="outline" zSize="sm">
+                        <i class='bx bx-arrow-back'></i>
+                        Sessions
+                    </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Error Message -->
+        @if (error()) {
+        <div
+            class="mb-6 bg-destructive/10 text-destructive text-sm p-4 rounded-lg border border-destructive/20 flex items-start gap-3">
+            <i class='bx bx-error-circle text-xl'></i>
+            <span>{{ error() }}</span>
+        </div>
+        }
+
+        <!-- Tabs -->
+        <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
+            <nav class="flex gap-4" aria-label="Tabs">
+                @if (sessionId()) {
+                <button (click)="setActiveTab('session')" [class.border-primary]="activeTab() === 'session'"
+                    [class.text-primary]="activeTab() === 'session'"
+                    class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
+                    [class.border-transparent]="activeTab() !== 'session'"
+                    [class.text-gray-500]="activeTab() !== 'session'">
+                    <i class='bx bx-game'></i>
+                    Cette session
+                </button>
+                }
+                <button (click)="setActiveTab('global')" [class.border-primary]="activeTab() === 'global'"
+                    [class.text-primary]="activeTab() === 'global'"
+                    class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
+                    [class.border-transparent]="activeTab() !== 'global'"
+                    [class.text-gray-500]="activeTab() !== 'global'">
+                    <i class='bx bx-globe'></i>
+                    Classement Global
+                </button>
+                <button (click)="setActiveTab('friends')" [class.border-primary]="activeTab() === 'friends'"
+                    [class.text-primary]="activeTab() === 'friends'"
+                    class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
+                    [class.border-transparent]="activeTab() !== 'friends'"
+                    [class.text-gray-500]="activeTab() !== 'friends'">
+                    <i class='bx bx-group'></i>
+                    Entre amis
+                </button>
+            </nav>
+        </div>
+
+        <!-- Loading State -->
+        @if (loading()) {
+        <div class="text-center py-12">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            <p class="mt-4 text-gray-600 dark:text-gray-400">Chargement du classement...</p>
+        </div>
+        }
+
+        <!-- Leaderboard Table -->
+        @if (!loading()) {
+        <z-card class="p-0 overflow-hidden">
+            <!-- Table Header -->
+            <div class="bg-gray-50 dark:bg-gray-800 px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    @if (activeTab() === 'session') {
+                    <i class='bx bx-game'></i>
+                    Classement de la session
+                    } @else if (activeTab() === 'global') {
+                    <i class='bx bx-globe'></i>
+                    Top 50 mondial
+                    } @else {
+                    <i class='bx bx-group'></i>
+                    Classement entre amis
+                    }
+                </h2>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    {{ displayedLeaderboard().length }} joueur{{ displayedLeaderboard().length > 1 ? 's' : '' }}
+                </p>
+            </div>
+
+            <!-- Empty State -->
+            @if (displayedLeaderboard().length === 0) {
+            <div class="text-center py-12 px-6">
+                <i class='bx bx-medal text-6xl text-gray-400 dark:text-gray-600 mb-4'></i>
+                <p class="text-gray-600 dark:text-gray-400">Aucun classement disponible.</p>
+            </div>
+            }
+
+            <!-- Table -->
+            @if (displayedLeaderboard().length > 0) {
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Rang
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Joueur
+                            </th>
+                            @if (activeTab() === 'session') {
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Score session
+                            </th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Réponses
+                            </th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Statut
+                            </th>
+                            } @else {
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Score total
+                            </th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Parties
+                            </th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Meilleur score
+                            </th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Moyenne
+                            </th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                        @for (entry of displayedLeaderboard(); track entry.user_id) {
+                        <tr [class.bg-primary/5]="isCurrentUser(entry)"
+                            [class.border-l-4]="isCurrentUser(entry)"
+                            [class.border-l-primary]="isCurrentUser(entry)"
+                            class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                            <!-- Rank -->
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center gap-2">
+                                    <z-badge [zType]="getRankColor(entry.rank)" class="font-bold">
+                                        {{ entry.rank }}
+                                    </z-badge>
+                                    @if (getRankIcon(entry.rank)) {
+                                    <span class="text-2xl">{{ getRankIcon(entry.rank) }}</span>
+                                    }
+                                </div>
+                            </td>
+
+                            <!-- Player -->
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center gap-2">
+                                    <div>
+                                        <div class="font-semibold text-gray-900 dark:text-gray-100">
+                                            {{ entry.username }}
+                                            @if (isCurrentUser(entry)) {
+                                            <z-badge [zType]="'default'" class="ml-2">Vous</z-badge>
+                                            }
+                                        </div>
+                                        <div class="text-sm text-gray-500 dark:text-gray-400">
+                                            {{ entry.email }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- Session-specific columns -->
+                            @if (activeTab() === 'session') {
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <div class="text-2xl font-bold text-primary">
+                                    {{ entry.session_score || 0 }}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <span class="text-gray-900 dark:text-gray-100">
+                                    {{ entry.answers_count || 0 }} / 4
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                @if (entry.completed) {
+                                <z-badge [zType]="'default'">
+                                    <i class='bx bx-check'></i> Terminé
+                                </z-badge>
+                                } @else {
+                                <z-badge [zType]="'outline'">
+                                    <i class='bx bx-time'></i> En cours
+                                </z-badge>
+                                }
+                            </td>
+                            } @else {
+                            <!-- Global/Friends columns -->
+                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                <div class="text-xl font-bold text-primary">
+                                    {{ entry.total_score || 0 }}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <span class="text-gray-900 dark:text-gray-100">
+                                    {{ entry.games_played || 0 }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                <span class="text-gray-900 dark:text-gray-100">
+                                    {{ entry.best_session_score || 0 }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                <span class="text-gray-900 dark:text-gray-100">
+                                    {{ entry.average_score?.toFixed(1) || '0.0' }}
+                                </span>
+                            </td>
+                            }
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            }
+        </z-card>
+        }
+    </main>
+</div>

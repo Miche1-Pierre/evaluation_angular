@@ -1,0 +1,233 @@
+<div class="min-h-screen bg-muted/50">
+    <!-- Header -->
+    <header
+        class="bg-background border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <img src="/logo.svg" alt="Logo" class="h-10 w-10" />
+                    <h1
+                        class="text-2xl font-bold bg-linear-to-r from-primary to-orange-500 bg-clip-text text-transparent">
+                        Sessions de jeu
+                    </h1>
+                </div>
+                <div class="flex items-center gap-3">
+                    <app-theme-toggle />
+                    <a [routerLink]="['/dashboard']" z-button zType="outline" zSize="sm">
+                        <i class='bx bx-arrow-back'></i>
+                        Dashboard
+                    </a>
+                    <a [routerLink]="['/sessions/create']" z-button zType="default" zSize="sm">
+                        <i class='bx bx-plus'></i>
+                        Nouvelle session
+                    </a>
+                    <button (click)="logout()" z-button zType="ghost" zSize="sm">
+                        <i class='bx bx-log-out'></i>
+                        Déconnexion
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Tabs -->
+        <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
+            <nav class="flex gap-4" aria-label="Tabs">
+                <button (click)="setActiveTab('all')" [class.border-primary]="activeTab() === 'all'"
+                    [class.text-primary]="activeTab() === 'all'"
+                    class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
+                    [class.border-transparent]="activeTab() !== 'all'" [class.text-gray-500]="activeTab() !== 'all'">
+                    <i class='bx bx-globe'></i>
+                    Toutes les sessions
+                </button>
+                <button (click)="setActiveTab('my-created')" [class.border-primary]="activeTab() === 'my-created'"
+                    [class.text-primary]="activeTab() === 'my-created'"
+                    class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
+                    [class.border-transparent]="activeTab() !== 'my-created'"
+                    [class.text-gray-500]="activeTab() !== 'my-created'">
+                    <i class='bx bx-user-check'></i>
+                    Mes sessions créées
+                </button>
+                <button (click)="setActiveTab('my-participations')"
+                    [class.border-primary]="activeTab() === 'my-participations'"
+                    [class.text-primary]="activeTab() === 'my-participations'"
+                    class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
+                    [class.border-transparent]="activeTab() !== 'my-participations'"
+                    [class.text-gray-500]="activeTab() !== 'my-participations'">
+                    <i class='bx bx-joystick'></i>
+                    Mes participations
+                </button>
+            </nav>
+        </div>
+
+        <!-- Filters -->
+        <div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Search -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <i class='bx bx-search'></i>
+                    Rechercher
+                </label>
+                <input type="text" [(ngModel)]="searchQuery" [value]="searchQuery()"
+                    (ngModelChange)="searchQuery.set($event)" placeholder="Nom de session ou créateur..."
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent" />
+            </div>
+
+            <!-- Difficulty Filter -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <i class='bx bx-slider'></i>
+                    Difficulté
+                </label>
+                <select [(ngModel)]="selectedDifficulty" [value]="selectedDifficulty()"
+                    (ngModelChange)="selectedDifficulty.set($event)"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <option value="all">Toutes</option>
+                    <option value="easy">Facile</option>
+                    <option value="medium">Moyen</option>
+                    <option value="hard">Difficile</option>
+                </select>
+            </div>
+
+            <!-- Visibility Filter -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <i class='bx bx-shield'></i>
+                    Visibilité
+                </label>
+                <select [(ngModel)]="selectedVisibility" [value]="selectedVisibility()"
+                    (ngModelChange)="selectedVisibility.set($event)"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <option value="all">Toutes</option>
+                    <option value="public">Publiques</option>
+                    <option value="private">Privées</option>
+                    <option value="friends_only">Amis uniquement</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Results Count -->
+        <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+            <i class='bx bx-list-ul'></i>
+            {{ filteredSessions.length }} session{{ filteredSessions.length > 1 ? 's' : '' }} trouvée{{
+            filteredSessions.length > 1 ? 's' : '' }}
+        </div>
+
+        <!-- Loading State -->
+        @if (loading()) {
+            <div class="text-center py-12">
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                <p class="mt-4 text-gray-600 dark:text-gray-400">Chargement des sessions...</p>
+            </div>
+        }
+
+        <!-- Empty State -->
+        @if (!loading() && filteredSessions.length === 0) {
+            <div class="text-center py-12">
+                <i class='bx bx-game text-6xl text-gray-400 dark:text-gray-600 mb-4'></i>
+                <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    Aucune session trouvée
+                </h3>
+                <p class="text-gray-600 dark:text-gray-400 mb-6">
+                    {{ activeTab() === 'all' ? 'Aucune session active pour le moment.' : 'Vous n\'avez pas encore de sessions dans cette catégorie.' }}
+                </p>
+                <a [routerLink]="['/sessions/create']" z-button zType="default">
+                    <i class='bx bx-plus'></i>
+                    Créer une session
+                </a>
+            </div>
+        }
+
+        <!-- Sessions Grid -->
+        @if (!loading() && filteredSessions.length > 0) {
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                @for (session of filteredSessions; track session.id) {
+                    <z-card class="p-6 hover:shadow-lg transition-shadow">
+                <!-- Card Header -->
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex-1">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                            {{ session.name }}
+                        </h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                            <i class='bx bx-user'></i>
+                            Par {{ session.creator_username || 'Inconnu' }}
+                        </p>
+                    </div>
+                    <z-badge [zType]="getStatusColor(session.status)">
+                        {{ session.status }}
+                    </z-badge>
+                </div>
+
+                <!-- Session Info -->
+                <div class="space-y-2 mb-4">
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                            <i class='bx bx-slider'></i>
+                            Difficulté
+                        </span>
+                        <z-badge [zType]="getDifficultyColor(session.difficulty)">
+                            {{ session.difficulty }}
+                        </z-badge>
+                    </div>
+
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                            <i [class]="'bx ' + getVisibilityIcon(session.visibility)"></i>
+                            Visibilité
+                        </span>
+                        <span class="font-medium text-gray-900 dark:text-gray-100">
+                            {{ session.visibility === 'public' ? 'Publique' : session.visibility === 'private' ?
+                            'Privée' : 'Amis' }}
+                        </span>
+                    </div>
+
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                            <i class='bx bx-group'></i>
+                            Participants
+                        </span>
+                        <span class="font-medium text-gray-900 dark:text-gray-100">
+                            {{ session.participant_count || 0 }}{{ session.max_participants ? '/' +
+                            session.max_participants : '' }}
+                        </span>
+                    </div>
+
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                            <i class='bx bx-time'></i>
+                            Créée le
+                        </span>
+                        <span class="font-medium text-gray-900 dark:text-gray-100">
+                            {{ session.created_at | date:'dd/MM/yyyy' }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    @if (activeTab() === 'my-participations') {
+                        <button (click)="playSession(session.id)" z-button zType="default" zSize="sm" class="flex-1">
+                            <i class='bx bx-play'></i>
+                            Jouer
+                        </button>
+                    }
+                    @if (activeTab() === 'all' && session.status === 'active') {
+                        <button (click)="joinSession(session.id)" z-button zType="default" zSize="sm" class="flex-1">
+                            <i class='bx bx-log-in-circle'></i>
+                            Rejoindre
+                        </button>
+                    }
+                    <a [routerLink]="['/sessions', session.id, 'play']" z-button zType="outline" zSize="sm" class="flex-1">
+                        <i class='bx bx-info-circle'></i>
+                        Jouer
+                    </a>
+                </div>
+                    </z-card>
+                }
+            </div>
+        }
+    </main>
+</div>

@@ -1,0 +1,145 @@
+<div class="min-h-screen bg-muted/50">
+    <!-- Header -->
+    <header class="bg-background border-b">
+        <div class="container mx-auto px-4 py-4">
+            <nav class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <img src="logo.svg" alt="Logo" class="w-10 h-10" />
+                    <span
+                        class="text-2xl font-bold bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">
+                        Pi & Rho's Games
+                    </span>
+                </div>
+
+                @if (currentUser) {
+                <div class="flex items-center gap-4">
+                    <app-theme-toggle />
+                    @if (currentUser.role === 'admin') {
+                    <a routerLink="/admin" z-button zType="default" class="text-sm">
+                        <i class='bx bx-shield mr-2'></i>
+                        Admin
+                    </a>
+                    }
+                    <span class="text-sm text-muted-foreground">
+                        Bienvenue, <span class="font-semibold text-foreground">{{ currentUser.username }}</span>
+                    </span>
+                    <button z-button zType="outline" (click)="logout()">
+                        <i class='bx bx-log-out mr-2'></i>
+                        Déconnexion
+                    </button>
+                </div>
+                }
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Welcome Section -->
+        <div class="mb-8">
+            <h1 class="text-4xl font-bold mb-2">Dashboard</h1>
+            <p class="text-muted-foreground">Suivez vos performances et rejoignez des sessions</p>
+        </div>
+
+        <!-- User Stats -->
+        @if (currentUser) {
+        <div class="grid md:grid-cols-4 gap-6 mb-6">
+            <z-card [zTitle]="getStatValue('total_score')" [zDescription]="'Score Total'">
+                <div class="mt-2 text-center">
+                    <i class='bx bx-target-lock text-4xl text-primary'></i>
+                </div>
+            </z-card>
+
+            <z-card [zTitle]="getStatValue('games_played')" [zDescription]="'Parties Jouées'">
+                <div class="mt-2 text-center">
+                    <i class='bx bx-joystick text-4xl text-primary'></i>
+                </div>
+            </z-card>
+
+            <z-card [zTitle]="getStatValue('best_session_score')" [zDescription]="'Meilleur Score'">
+                <div class="mt-2 text-center">
+                    <i class='bx bx-trophy text-4xl text-primary'></i>
+                </div>
+            </z-card>
+
+            <z-card [zTitle]="getStatValue('average_score')" [zDescription]="'Score Moyen'">
+                <div class="mt-2 text-center">
+                    <i class='bx bx-bar-chart text-4xl text-primary'></i>
+                </div>
+            </z-card>
+        </div>
+
+        <!-- Additional Stats -->
+        <div class="grid md:grid-cols-3 gap-6 mb-8">
+            <z-card [zTitle]="friendsCount().toString()" [zDescription]="'Amis'">
+                <div class="mt-2 text-center">
+                    <i class='bx bx-group text-4xl text-primary'></i>
+                </div>
+            </z-card>
+
+            <z-card [zTitle]="sessionsCount().toString()" [zDescription]="'Sessions Actives'">
+                <div class="mt-2 text-center">
+                    <i class='bx bx-game text-4xl text-primary'></i>
+                </div>
+            </z-card>
+
+            <z-card [zTitle]="pendingRequestsCount().toString()" [zDescription]="'Demandes en attente'">
+                <div class="mt-2 text-center">
+                    <i class='bx bx-bell text-4xl text-primary'></i>
+                </div>
+            </z-card>
+        </div>
+        }
+
+        <!-- Quick Actions -->
+        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <z-card [zTitle]="'Nouvelle Session'" [zDescription]="'Créez une nouvelle session de jeu'">
+                <a routerLink="/sessions/create" z-button class="w-full">
+                    <i class='bx bx-plus-circle mr-2'></i>
+                    Créer une Session
+                </a>
+            </z-card>
+
+            <z-card [zTitle]="'Rejoindre une Session'" [zDescription]="'Participez à une session existante'">
+                <a routerLink="/sessions" z-button zType="outline" class="w-full">
+                    <i class='bx bx-group mr-2'></i>
+                    Voir les Sessions
+                </a>
+            </z-card>
+
+            <z-card [zTitle]="'Classements'" [zDescription]="'Consultez les meilleurs scores'">
+                <a routerLink="/leaderboard" z-button zType="outline" class="w-full">
+                    <i class='bx bx-trophy mr-2'></i>
+                    Voir les Classements
+                </a>
+            </z-card>
+
+            <z-card [zTitle]="'Mes Amis'" [zDescription]="'Gérez vos amis et demandes'">
+                <a routerLink="/friends" z-button zType="outline" class="w-full">
+                    <i class='bx bx-user-plus mr-2'></i>
+                    Voir mes Amis
+                </a>
+            </z-card>
+        </div>
+
+        <!-- Recent Activity -->
+        <z-card [zTitle]="'Activité Récente'" [zDescription]="'Vos performances des 14 derniers jours'">
+            @if (isLoadingActivity()) {
+            <div class="text-center py-12 text-muted-foreground">
+                <i class='bx bx-loader-alt bx-spin text-4xl'></i>
+                <p class="mt-4">Chargement de votre activité...</p>
+            </div>
+            } @else if (hasNoActivity()) {
+            <div class="text-center py-12 text-muted-foreground">
+                <i class='bx bx-bar-chart text-4xl'></i>
+                <p class="mt-4">Aucune activité récente</p>
+                <p class="text-sm mt-2">Commencez à jouer pour voir vos statistiques ici !</p>
+            </div>
+            } @else {
+            <div class="w-full" style="height: 300px;">
+                <canvas #activityChart></canvas>
+            </div>
+            }
+        </z-card>
+    </main>
+</div>

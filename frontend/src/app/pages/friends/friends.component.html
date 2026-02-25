@@ -1,0 +1,260 @@
+<div class="min-h-screen bg-muted/50">
+    <!-- Header -->
+    <header
+        class="bg-background border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <img src="/logo.svg" alt="Logo" class="h-10 w-10" />
+                    <h1
+                        class="text-2xl font-bold bg-linear-to-r from-primary to-orange-500 bg-clip-text text-transparent">
+                        <i class='bx bx-group'></i>
+                        Mes amis
+                    </h1>
+                </div>
+                <div class="flex items-center gap-3">
+                    <app-theme-toggle />
+                    <a [routerLink]="['/dashboard']" z-button zType="outline" zSize="sm">
+                        <i class='bx bx-arrow-back'></i>
+                        Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Success/Error Messages -->
+        @if (successMessage()) {
+        <div
+            class="mb-6 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 text-sm p-4 rounded-lg border border-green-200 dark:border-green-800 flex items-start gap-3">
+            <i class='bx bx-check-circle text-xl'></i>
+            <span>{{ successMessage() }}</span>
+        </div>
+        }
+
+        @if (error()) {
+        <div
+            class="mb-6 bg-destructive/10 text-destructive text-sm p-4 rounded-lg border border-destructive/20 flex items-start gap-3">
+            <i class='bx bx-error-circle text-xl'></i>
+            <span>{{ error() }}</span>
+        </div>
+        }
+
+        <!-- Add Friend Form -->
+        <z-card class="p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                <i class='bx bx-user-plus'></i>
+                Ajouter un ami
+            </h2>
+            <form [formGroup]="requestForm" (ngSubmit)="onSubmitRequest()" class="flex gap-3">
+                <div class="flex-1">
+                    <input z-input type="email" formControlName="receiver_email"
+                        placeholder="Entrez l'email de votre ami"
+                        [class.border-destructive]="receiverEmail?.invalid && receiverEmail?.touched" />
+                </div>
+                <button z-button type="submit" [zDisabled]="requestForm.invalid || submitting()"
+                    [zLoading]="submitting()">
+                    @if (submitting()) {
+                    Envoi...
+                    } @else {
+                    <i class='bx bx-send'></i>
+                    Envoyer la demande
+                    }
+                </button>
+            </form>
+        </z-card>
+
+        <!-- Tabs -->
+        <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
+            <nav class="flex gap-4" aria-label="Tabs">
+                <button (click)="setActiveTab('friends')" [class.border-primary]="activeTab() === 'friends'"
+                    [class.text-primary]="activeTab() === 'friends'"
+                    class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
+                    [class.border-transparent]="activeTab() !== 'friends'"
+                    [class.text-gray-500]="activeTab() !== 'friends'">
+                    <i class='bx bx-group'></i>
+                    Mes amis ({{ friends().length }})
+                </button>
+                <button (click)="setActiveTab('received')" [class.border-primary]="activeTab() === 'received'"
+                    [class.text-primary]="activeTab() === 'received'"
+                    class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
+                    [class.border-transparent]="activeTab() !== 'received'"
+                    [class.text-gray-500]="activeTab() !== 'received'">
+                    <i class='bx bx-bell'></i>
+                    Demandes reçues ({{ pendingRequests().length }})
+                </button>
+                <button (click)="setActiveTab('sent')" [class.border-primary]="activeTab() === 'sent'"
+                    [class.text-primary]="activeTab() === 'sent'"
+                    class="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
+                    [class.border-transparent]="activeTab() !== 'sent'" [class.text-gray-500]="activeTab() !== 'sent'">
+                    <i class='bx bx-paper-plane'></i>
+                    Demandes envoyées ({{ sentRequests().length }})
+                </button>
+            </nav>
+        </div>
+
+        <!-- Loading State -->
+        @if (loading()) {
+        <div class="text-center py-12">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            <p class="mt-4 text-gray-600 dark:text-gray-400">Chargement...</p>
+        </div>
+        }
+
+        <!-- Friends List Tab -->
+        @if (!loading() && activeTab() === 'friends') {
+        <div>
+            @if (friends().length === 0) {
+            <z-card class="p-12 text-center">
+                <i class='bx bx-user-x text-6xl text-gray-400 dark:text-gray-600 mb-4'></i>
+                <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    Aucun ami pour le moment
+                </h3>
+                <p class="text-gray-600 dark:text-gray-400">
+                    Invitez vos amis pour jouer ensemble !
+                </p>
+            </z-card>
+            } @else {
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                @for (friend of friends(); track friend.user_id) {
+                <z-card class="p-6 hover:shadow-lg transition-shadow">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                {{ friend.username }}
+                            </h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                {{ friend.email }}
+                            </p>
+                        </div>
+                        <button (click)="removeFriend(friend.user_id)" z-button zType="destructive" zSize="sm">
+                            <i class='bx bx-user-minus'></i>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-3 text-center">
+                        <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded">
+                            <div class="text-2xl font-bold text-primary">{{ friend.total_score }}</div>
+                            <div class="text-xs text-gray-600 dark:text-gray-400">Score total</div>
+                        </div>
+                        <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded">
+                            <div class="text-2xl font-bold text-primary">{{ friend.games_played }}</div>
+                            <div class="text-xs text-gray-600 dark:text-gray-400">Parties</div>
+                        </div>
+                        <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded">
+                            <div class="text-2xl font-bold text-primary">{{ friend.best_session_score || 0 }}</div>
+                            <div class="text-xs text-gray-600 dark:text-gray-400">Meilleur</div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 text-xs text-gray-500 dark:text-gray-400">
+                        <i class='bx bx-time'></i>
+                        Amis depuis {{ friend.became_friends_at | date:'dd/MM/yyyy' }}
+                    </div>
+                </z-card>
+                }
+            </div>
+            }
+        </div>
+        }
+
+        <!-- Received Requests Tab -->
+        @if (!loading() && activeTab() === 'received') {
+        <div>
+            @if (pendingRequests().length === 0) {
+            <z-card class="p-12 text-center">
+                <i class='bx bx-bell-off text-6xl text-gray-400 dark:text-gray-600 mb-4'></i>
+                <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    Aucune demande en attente
+                </h3>
+                <p class="text-gray-600 dark:text-gray-400">
+                    Vous n'avez pas de nouvelles demandes d'ami.
+                </p>
+            </z-card>
+            } @else {
+            <div class="space-y-4">
+                @for (request of pendingRequests(); track request.id) {
+                <z-card class="p-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                {{ request.sender_username }}
+                            </h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                {{ request.sender_email }}
+                            </p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                <i class='bx bx-time'></i>
+                                Envoyée le {{ request.created_at | date:'dd/MM/yyyy à HH:mm' }}
+                            </p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button (click)="acceptRequest(request.id)" z-button zType="default" zSize="sm">
+                                <i class='bx bx-check'></i>
+                                Accepter
+                            </button>
+                            <button (click)="rejectRequest(request.id)" z-button zType="destructive" zSize="sm">
+                                <i class='bx bx-x'></i>
+                                Refuser
+                            </button>
+                        </div>
+                    </div>
+                </z-card>
+                }
+            </div>
+            }
+        </div>
+        }
+
+        <!-- Sent Requests Tab -->
+        @if (!loading() && activeTab() === 'sent') {
+        <div>
+            @if (sentRequests().length === 0) {
+            <z-card class="p-12 text-center">
+                <i class='bx bx-paper-plane text-6xl text-gray-400 dark:text-gray-600 mb-4'></i>
+                <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    Aucune demande envoyée
+                </h3>
+                <p class="text-gray-600 dark:text-gray-400">
+                    Vous n'avez pas de demandes d'ami en attente.
+                </p>
+            </z-card>
+            } @else {
+            <div class="space-y-4">
+                @for (request of sentRequests(); track request.id) {
+                <z-card class="p-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                {{ request.receiver_username }}
+                            </h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                {{ request.receiver_email }}
+                            </p>
+                            <div class="flex items-center gap-2 mt-2">
+                                <z-badge [zType]="'outline'">
+                                    <i class='bx bx-time'></i>
+                                    En attente
+                                </z-badge>
+                                <span class="text-xs text-gray-500 dark:text-gray-400">
+                                    Envoyée le {{ request.created_at | date:'dd/MM/yyyy à HH:mm' }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button (click)="cancelRequest(request.id)" z-button zType="outline" zSize="sm">
+                                <i class='bx bx-x'></i>
+                                Annuler
+                            </button>
+                        </div>
+                    </div>
+                </z-card>
+                }
+            </div>
+            }
+        </div>
+        }
+    </main>
+</div>

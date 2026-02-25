@@ -1,0 +1,147 @@
+name: Commit Linter
+
+on:
+    pull_request:
+        types: [opened, edited, synchronize, reopened]
+
+permissions:
+    pull-requests: write
+    contents: read
+
+jobs:
+    # ============================================
+    # Vérifier les messages de commit
+    # ============================================
+    lint-commits:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: Validate commit messages
+              run: |
+                  echo "🔍 Validation des messages de commit..."
+
+                  # Liste des commits dans le PR
+                  COMMITS=$(git log origin/${{ github.base_ref }}..HEAD --pretty=format:"%s")
+
+                  # Pattern pour Conventional Commits
+                  PATTERN="^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?(!)?: .{1,100}"
+
+                  INVALID_COMMITS=""
+                  ERROR_COUNT=0
+
+                  while IFS= read -r commit; do
+                    if ! echo "$commit" | grep -qE "$PATTERN"; then
+                      INVALID_COMMITS="$INVALID_COMMITS\n- $commit"
+                      ERROR_COUNT=$((ERROR_COUNT + 1))
+                    fi
+                  done <<< "$COMMITS"
+
+                  if [ $ERROR_COUNT -gt 0 ]; then
+                    echo "❌ $ERROR_COUNT commit(s) invalide(s) détecté(s):"
+                    echo -e "$INVALID_COMMITS"
+                    echo ""
+                    echo "ℹ️  Les commits doivent suivre le format Conventional Commits:"
+                    echo "   <type>(<scope>): <description>"
+                    echo ""
+                    echo "Types autorisés:"
+                    echo "  - feat:     Nouvelle fonctionnalité"
+                    echo "  - fix:      Correction de bug"
+                    echo "  - docs:     Documentation"
+                    echo "  - style:    Formatage, lint"
+                    echo "  - refactor: Refactoring"
+                    echo "  - perf:     Performance"
+                    echo "  - test:     Tests"
+                    echo "  - build:    Build système"
+                    echo "  - ci:       CI/CD"
+                    echo "  - chore:    Maintenance"
+                    echo "  - revert:   Revert d'un commit"
+                    echo ""
+                    echo "Exemples:"
+                    echo "  ✅ feat(auth): add JWT authentication"
+                    echo "  ✅ fix(api): resolve CORS issue"
+                    echo "  ✅ docs: update README with Docker instructions"
+                    echo "  ❌ Added new feature"
+                    echo "  ❌ fix bug"
+                    exit 1
+                  else
+                    echo "✅ Tous les commits sont valides!"
+                  fi
+
+            - name: Add PR comment on failure
+              if: failure()
+              uses: actions/github-script@v7
+              with:
+                  script: |
+                      github.rest.issues.createComment({
+                        issue_number: context.issue.number,
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        body: `## ⚠️ Messages de commit invalides
+
+                      Les commits de cette PR ne suivent pas les [Conventional Commits](https://www.conventionalcommits.org/).
+
+                      ### Format attendu
+                      \`\`\`
+                      <type>(<scope>): <description>
+
+                      [optional body]
+
+                      [optional footer]
+                      \`\`\`
+
+                      ### Types autorisés
+                      - \`feat:\` - Nouvelle fonctionnalité
+                      - \`fix:\` - Correction de bug
+                      - \`docs:\` - Documentation
+                      - \`style:\` - Formatage, lint
+                      - \`refactor:\` - Refactoring
+                      - \`perf:\` - Performance
+                      - \`test:\` - Tests
+                      - \`build:\` - Build système
+                      - \`ci:\` - CI/CD
+                      - \`chore:\` - Maintenance
+
+                      ### Exemples
+                      \`\`\`
+                      ✅ feat(auth): add JWT authentication
+                      ✅ fix(api): resolve CORS issue with frontend
+                      ✅ docs: update README with Docker instructions
+                      ✅ feat!: breaking change in API response format
+                      ❌ Added new feature
+                      ❌ fix bug
+                      ❌ Update
+                      \`\`\`
+
+                      ### Breaking Changes
+                      Pour signaler un breaking change, ajoutez \`!\` après le type :
+                      \`\`\`
+                      feat!: redesign user authentication system
+                      \`\`\`
+
+                      Ou dans le footer :
+                      \`\`\`
+                      feat(api): change response format
+
+                      BREAKING CHANGE: API now returns data in a different structure
+                      \`\`\`
+
+                      Veuillez reformuler vos commits avant de merger cette PR. 🙏
+                      `
+                      })
+
+            - name: Add success comment
+              if: success()
+              uses: actions/github-script@v7
+              with:
+                  script: |
+                      github.rest.issues.createComment({
+                        issue_number: context.issue.number,
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        body: '✅ Tous les messages de commit suivent les Conventional Commits! 🎉'
+                      })

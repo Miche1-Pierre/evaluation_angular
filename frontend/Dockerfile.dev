@@ -1,0 +1,27 @@
+# ============================================
+# Development Dockerfile - Frontend
+# Avec hot reload (ng serve)
+# ============================================
+FROM node:22-alpine
+
+WORKDIR /app
+
+# Installer les dépendances système nécessaires pour Angular
+RUN apk add --no-cache python3 make g++
+
+# Copier les fichiers de configuration
+COPY package*.json ./
+COPY angular.json ./
+COPY tsconfig*.json ./
+COPY components.json ./
+
+# Installer les dépendances
+RUN npm install
+
+# Le reste est monté via volumes dans docker-compose.dev.yml
+
+# Exposer le port
+EXPOSE 4200
+
+# Par défaut, mais sera overridé par docker-compose
+CMD ["npm", "start"]
