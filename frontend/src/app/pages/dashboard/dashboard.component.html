@@ -43,17 +43,50 @@
 
         <!-- User Stats -->
         @if (currentUser) {
-        <div class="grid md:grid-cols-4 gap-6 mb-8">
+        <div class="grid md:grid-cols-4 gap-6 mb-6">
             <z-card [zTitle]="getStatValue('total_score')" [zDescription]="'Score Total'">
+                <div class="mt-2 text-center">
+                    <i class='bx bx-target-lock text-4xl text-primary'></i>
+                </div>
             </z-card>
 
             <z-card [zTitle]="getStatValue('games_played')" [zDescription]="'Parties Jouées'">
+                <div class="mt-2 text-center">
+                    <i class='bx bx-joystick text-4xl text-primary'></i>
+                </div>
             </z-card>
 
             <z-card [zTitle]="getStatValue('best_session_score')" [zDescription]="'Meilleur Score'">
+                <div class="mt-2 text-center">
+                    <i class='bx bx-trophy text-4xl text-primary'></i>
+                </div>
             </z-card>
 
             <z-card [zTitle]="getStatValue('average_score')" [zDescription]="'Score Moyen'">
+                <div class="mt-2 text-center">
+                    <i class='bx bx-bar-chart text-4xl text-primary'></i>
+                </div>
+            </z-card>
+        </div>
+
+        <!-- Additional Stats -->
+        <div class="grid md:grid-cols-3 gap-6 mb-8">
+            <z-card [zTitle]="friendsCount().toString()" [zDescription]="'Amis'">
+                <div class="mt-2 text-center">
+                    <i class='bx bx-group text-4xl text-primary'></i>
+                </div>
+            </z-card>
+
+            <z-card [zTitle]="sessionsCount().toString()" [zDescription]="'Sessions Actives'">
+                <div class="mt-2 text-center">
+                    <i class='bx bx-game text-4xl text-primary'></i>
+                </div>
+            </z-card>
+
+            <z-card [zTitle]="pendingRequestsCount().toString()" [zDescription]="'Demandes en attente'">
+                <div class="mt-2 text-center">
+                    <i class='bx bx-bell text-4xl text-primary'></i>
+                </div>
             </z-card>
         </div>
         }

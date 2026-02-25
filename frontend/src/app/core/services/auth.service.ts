@@ -1,5 +1,6 @@
-import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { Injectable, inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, BehaviorSubject, tap } from 'rxjs';
 import { Router } from '@angular/router';
 
@@ -38,22 +39,18 @@ export interface LoginDTO {
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
+  private readonly platformId = inject(PLATFORM_ID);
 
   private readonly API_URL = 'http://localhost:3000/api';
   private readonly TOKEN_KEY = 'auth_token';
 
   private readonly currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
+  private initialized = false;
 
   constructor() {
-    // Check if user is already logged in from stored token
-    if (globalThis.window !== undefined) {
-      const token = this.getToken();
-      if (token) {
-        // Token validation will be handled by the interceptor
-        // If the token is invalid, the backend will return 401
-      }
-    }
+    // Ne rien faire dans le constructor pour éviter la dépendance circulaire
+    // L'initialisation se fera lors du premier accès à isAuthenticated()
   }
 
   register(data: RegisterDTO): Observable<AuthResponse> {
@@ -75,31 +72,88 @@ export class AuthService {
   }
 
   logout(): void {
-    if (globalThis.window !== undefined) {
-      localStorage.removeItem(this.TOKEN_KEY);
+    if (isPlatformBrowser(this.platformId)) {
+      try {
+        localStorage.removeItem(this.TOKEN_KEY);
+      } catch (e) {
+        console.warn('localStorage non disponible:', e);
+      }
     }
     this.currentUserSubject.next(null);
     this.router.navigate(['/']);
   }
 
   getToken(): string | null {
-    if (globalThis.window === undefined) {
+    // Pendant le SSR, pas de localStorage
+    if (!isPlatformBrowser(this.platformId)) {
       return null;
     }
-    return localStorage.getItem(this.TOKEN_KEY);
+    
+    try {
+      const token = localStorage.getItem(this.TOKEN_KEY);
+      console.log('🔑 getToken appelé - Token:', token ? token.substring(0, 20) + '...' : 'null');
+      return token;
+    } catch (e) {
+      console.warn('❌ getToken - localStorage non disponible:', e);
+      return null;
+    }
   }
 
   setToken(token: string): void {
-    if (globalThis.window !== undefined) {
-      localStorage.setItem(this.TOKEN_KEY, token);
+    if (isPlatformBrowser(this.platformId)) {
+      try {
+        localStorage.setItem(this.TOKEN_KEY, token);
+      } catch (e) {
+        console.warn('setToken - localStorage non disponible:', e);
+      }
     }
   }
 
   isAuthenticated(): boolean {
-    return !!this.getToken();
+    console.log('🛡️ isAuthenticated appelé');
+    const token = this.getToken();
+    console.log('🔍 Token présent:', !!token);
+    
+    // Initialiser l'utilisateur au premier appel si on a un token
+    if (!this.initialized && token) {
+      console.log('📡 Première initialisation - chargement utilisateur');
+      this.initialized = true;
+      // Charger l'utilisateur de manière asynchrone
+      this.loadCurrentUser().subscribe({
+        next: (user) => {
+          console.log('✅ Utilisateur chargé:', user.username);
+        },
+        error: (err: HttpErrorResponse) => {
+          console.error('❌ Erreur chargement:', err.status);
+          if (err.status === 401) {
+            if (isPlatformBrowser(this.platformId)) {
+              try {
+                localStorage.removeItem(this.TOKEN_KEY);
+              } catch (e) {
+                console.warn('removeItem - localStorage non disponible:', e);
+              }
+            }
+            this.currentUserSubject.next(null);
+          }
+        }
+      });
+    }
+    
+    return !!token;
   }
 
   getCurrentUser(): User | null {
     return this.currentUserSubject.value;
+  }
+
+  /**
+   * Charge les informations de l'utilisateur connecté depuis le backend
+   */
+  loadCurrentUser(): Observable<User> {
+    return this.http.get<User>(`${this.API_URL}/auth/me`).pipe(
+      tap((user) => {
+        this.currentUserSubject.next(user);
+      })
+    );
   }
 }

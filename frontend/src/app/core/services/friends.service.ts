@@ -59,7 +59,7 @@ export class FriendsService {
    * Récupère les demandes reçues en attente
    */
   getPendingRequests(): Observable<FriendRequest[]> {
-    return this.http.get<FriendRequest[]>(`${this.API_URL}/friends/requests/pending`);
+    return this.http.get<FriendRequest[]>(`${this.API_URL}/friends/requests`);
   }
 
   /**
@@ -74,7 +74,7 @@ export class FriendsService {
    */
   acceptFriendRequest(requestId: number): Observable<{ message: string; friendship: any }> {
     return this.http.post<{ message: string; friendship: any }>(
-      `${this.API_URL}/friends/request/${requestId}/accept`,
+      `${this.API_URL}/friends/requests/${requestId}/accept`,
       {}
     );
   }
@@ -84,7 +84,7 @@ export class FriendsService {
    */
   rejectFriendRequest(requestId: number): Observable<{ message: string }> {
     return this.http.post<{ message: string }>(
-      `${this.API_URL}/friends/request/${requestId}/reject`,
+      `${this.API_URL}/friends/requests/${requestId}/reject`,
       {}
     );
   }
