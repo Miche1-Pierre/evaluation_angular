@@ -129,7 +129,7 @@
                 <i class='bx bx-loader-alt bx-spin text-4xl'></i>
                 <p class="mt-4">Chargement de votre activité...</p>
             </div>
-            } @else if (activityData().length === 0 || activityData().every(d => d.sessions_completed === 0)) {
+            } @else if (hasNoActivity()) {
             <div class="text-center py-12 text-muted-foreground">
                 <i class='bx bx-bar-chart text-4xl'></i>
                 <p class="mt-4">Aucune activité récente</p>

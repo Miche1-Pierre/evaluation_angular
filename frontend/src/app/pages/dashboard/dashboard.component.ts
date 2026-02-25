@@ -224,6 +224,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
+  hasNoActivity(): boolean {
+    const data = this.activityData();
+    return data.every(d => d.sessions_completed === 0);
+  }
+
   getStatValue(key: keyof User): string {
     if (!this.currentUser) return '-';
     const value = this.currentUser[key];
