@@ -10,7 +10,6 @@ import { ZardButtonComponent } from '../../shared/components/button/button.compo
 import { ZardCardComponent } from '../../shared/components/card/card.component';
 import { ZardInputDirective } from '../../shared/components/input/input.directive';
 import { ZardFormLabelComponent } from '../../shared/components/form/form.component';
-import { ThemeToggleComponent } from '../../core/components/theme-toggle/theme-toggle.component';
 import { AppHeaderComponent, ActionButton } from '../../shared/components/header/app-header.component';
 
 @Component({
@@ -23,7 +22,6 @@ import { AppHeaderComponent, ActionButton } from '../../shared/components/header
     ZardCardComponent,
     ZardInputDirective,
     ZardFormLabelComponent,
-    ThemeToggleComponent,
     AppHeaderComponent,
   ],
   templateUrl: './create-session.component.html',
