@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { toast } from 'ngx-sonner';
 import { ProductsService } from '../../core/services/products.service';
 import { ThemesService } from '../../core/services/themes.service';
 import { SessionsService } from '../../core/services/sessions.service';
@@ -104,8 +105,8 @@ export class CreateSessionComponent implements OnInit {
     this.selectedProducts.set([]); // Reset selected products
     
     if (themeId === 'random') {
-      // Pour random, charger tous les produits
-      this.loadAllProducts();
+      // Pour random, charger tous les produits et auto-sélectionner 4
+      this.loadAllProductsAndAutoSelect();
     } else {
       // Charger les produits du thème sélectionné
       this.loadThemeProducts(themeId);
@@ -125,6 +126,32 @@ export class CreateSessionComponent implements OnInit {
         this.loadingProducts.set(false);
       },
     });
+  }
+
+  private loadAllProductsAndAutoSelect(): void {
+    this.loadingProducts.set(true);
+    this.productsService.getAllProducts().subscribe({
+      next: (products) => {
+        this.products.set(products);
+        this.loadingProducts.set(false);
+        
+        // Auto-sélectionner 4 produits aléatoires
+        if (products.length >= 4) {
+          const randomProducts = this.selectRandomProducts(products, 4);
+          this.selectedProducts.set(randomProducts.map(p => p.id));
+        }
+      },
+      error: (err) => {
+        console.error('Erreur lors du chargement des produits:', err);
+        this.error.set('Impossible de charger les produits. Veuillez réessayer.');
+        this.loadingProducts.set(false);
+      },
+    });
+  }
+
+  private selectRandomProducts(products: Product[], count: number): Product[] {
+    const shuffled = [...products].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, count);
   }
 
   private loadThemeProducts(themeId: number): void {
@@ -197,7 +224,10 @@ export class CreateSessionComponent implements OnInit {
 
     this.sessionsService.createSession(sessionData).subscribe({
       next: (session) => {
-        console.log('Session créée avec succès:', session);
+        toast.success('✅ Session créée avec succès !', {
+          description: `${session.name} - Vous allez être redirigé`,
+          duration: 3000,
+        });
         // Rejoindre automatiquement la session après création
         this.sessionsService.joinSession(session.id).subscribe({
           next: () => {
@@ -206,6 +236,10 @@ export class CreateSessionComponent implements OnInit {
           },
           error: (joinErr) => {
             console.error('Erreur lors de la tentative de rejoindre la session:', joinErr);
+            toast.warning('Session créée mais erreur lors de la connexion', {
+              description: 'Vous pouvez la rejoindre depuis la liste',
+              duration: 4000,
+            });
             // Même en cas d'erreur de join, rediriger vers la liste des sessions
             this.router.navigate(['/sessions']);
           }
@@ -213,9 +247,12 @@ export class CreateSessionComponent implements OnInit {
       },
       error: (err) => {
         console.error('Erreur lors de la création de la session:', err);
-        this.error.set(
-          err.error?.error || err.error?.message || 'Une erreur est survenue lors de la création de la session.'
-        );
+        const errorMsg = err.error?.error || err.error?.message || 'Une erreur est survenue lors de la création de la session.';
+        this.error.set(errorMsg);
+        toast.error('Erreur de création', {
+          description: errorMsg,
+          duration: 4000,
+        });
         this.loading.set(false);
       },
     });

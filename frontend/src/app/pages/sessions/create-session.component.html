@@ -169,13 +169,32 @@
                             {{ selectedProducts().length }}/4 produits sélectionnés
                         </span>
                     </p>
+                    @if (selectedThemeId() === 'random' && selectedProducts().length === 4) {
+                    <div class="mt-4 bg-primary/10 border border-primary/20 rounded-lg p-4 flex items-start gap-3">
+                        <i class='bx bx-check-circle text-2xl text-primary'></i>
+                        <div>
+                            <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                ✨ 4 produits aléatoires sélectionnés automatiquement
+                            </p>
+                            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                Vous pouvez modifier la sélection en cliquant sur les produits ci-dessous
+                            </p>
+                        </div>
+                    </div>
+                    }
                 </div>
 
                 <!-- Loading Products -->
                 @if (loadingProducts()) {
                 <div class="text-center py-12">
                     <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-                    <p class="mt-4 text-gray-600 dark:text-gray-400">Chargement des produits...</p>
+                    <p class="mt-4 text-gray-600 dark:text-gray-400">
+                        @if (selectedThemeId() === 'random') {
+                        Sélection aléatoire en cours...
+                        } @else {
+                        Chargement des produits...
+                        }
+                    </p>
                 </div>
                 }
 
