@@ -210,6 +210,71 @@ router.get(
 );
 
 /**
+ * GET /api/sessions/my/created
+ * Récupère les sessions créées par l'utilisateur connecté
+ */
+router.get(
+  "/my/created",
+  authMiddleware,
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const userId = req.user!.id;
+
+      const result = await pool.query(
+        `SELECT 
+          s.id, s.name, s.creator_id, s.status, s.difficulty, s.visibility, s.max_participants, s.created_at, s.updated_at,
+          u.username as creator_username,
+          (SELECT COUNT(*) FROM participants WHERE session_id = s.id) as participant_count
+        FROM sessions s
+        JOIN users u ON u.id = s.creator_id
+        WHERE s.creator_id = $1
+        ORDER BY s.created_at DESC`,
+        [userId]
+      );
+
+      res.json(result.rows);
+    } catch (error) {
+      console.error("Error fetching my created sessions:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération de vos sessions créées" });
+    }
+  }
+);
+
+/**
+ * GET /api/sessions/my/participating
+ * Récupère les sessions où l'utilisateur participe (mais n'est pas créateur)
+ */
+router.get(
+  "/my/participating",
+  authMiddleware,
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const userId = req.user!.id;
+
+      const result = await pool.query(
+        `SELECT DISTINCT
+          s.id, s.name, s.creator_id, s.status, s.difficulty, s.visibility, s.max_participants, s.created_at, s.updated_at,
+          u.username as creator_username,
+          (SELECT COUNT(*) FROM participants WHERE session_id = s.id) as participant_count,
+          p.session_score,
+          p.completed as my_completion_status
+        FROM sessions s
+        JOIN users u ON u.id = s.creator_id
+        JOIN participants p ON p.session_id = s.id
+        WHERE p.user_id = $1 AND s.creator_id != $1
+        ORDER BY s.created_at DESC`,
+        [userId]
+      );
+
+      res.json(result.rows);
+    } catch (error) {
+      console.error("Error fetching my participating sessions:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération de vos participations" });
+    }
+  }
+);
+
+/**
  * GET /api/sessions/:id
  * Détails d'une session spécifique
  */
