@@ -45,6 +45,19 @@
             <p class="text-muted-foreground">Gérez votre plateforme et supervisez les activités</p>
         </div>
 
+        <!-- Error Message -->
+        @if (error) {
+            <div class="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg dark:bg-red-900/30 dark:border-red-800 dark:text-red-400">
+                <div class="flex items-center gap-3">
+                    <i class='bx bx-error-circle text-2xl'></i>
+                    <div>
+                        <p class="font-medium">{{ error }}</p>
+                        <p class="text-sm mt-1">Connectez-vous avec un compte administrateur (admin@dfs.com / password123)</p>
+                    </div>
+                </div>
+            </div>
+        }
+
         <!-- Platform Stats -->
         <div class="grid md:grid-cols-4 gap-6 mb-8">
             @for (stat of platformStats; track stat.label) {

@@ -24,6 +24,7 @@ export class AdminDashboardComponent implements OnInit {
   recentSessions: RecentSession[] = [];
   activities: Activity[] = [];
   loading = true;
+  error: string | null = null;
 
   // Stats pour l'admin
   platformStats = [
@@ -80,26 +81,33 @@ export class AdminDashboardComponent implements OnInit {
 
   private loadData(): void {
     this.loading = true;
+    this.error = null;
 
     // Charger les statistiques
     this.adminService.getStats().subscribe({
       next: (stats) => {
+        console.log('📊 Stats reçues:', stats);
         this.stats = stats;
         this.updatePlatformStats(stats);
       },
       error: (error) => {
-        console.error('Erreur lors du chargement des stats:', error);
+        console.error('❌ Erreur lors du chargement des stats:', error);
+        this.error = error.status === 403 
+          ? 'Accès refusé. Vous devez être administrateur pour accéder à cette page.'
+          : 'Erreur lors du chargement des données administrateur.';
+        this.loading = false;
       }
     });
 
     // Charger les sessions récentes
     this.adminService.getRecentSessions(5).subscribe({
       next: (sessions) => {
+        console.log('🎮 Sessions récentes reçues:', sessions);
         this.recentSessions = sessions;
         this.loading = false;
       },
       error: (error) => {
-        console.error('Erreur lors du chargement des sessions récentes:', error);
+        console.error('❌ Erreur lors du chargement des sessions récentes:', error);
         this.loading = false;
       }
     });
@@ -107,10 +115,11 @@ export class AdminDashboardComponent implements OnInit {
     // Charger l'activité récente
     this.adminService.getActivity(10).subscribe({
       next: (activities) => {
+        console.log('📝 Activité récente reçue:', activities);
         this.activities = activities;
       },
       error: (error) => {
-        console.error('Erreur lors du chargement de l\'activité:', error);
+        console.error('❌ Erreur lors du chargement de l\'activité:', error);
       }
     });
   }
