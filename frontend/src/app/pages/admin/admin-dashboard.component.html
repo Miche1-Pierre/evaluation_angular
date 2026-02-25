@@ -60,26 +60,12 @@
 
         <!-- Platform Stats -->
         <div class="grid md:grid-cols-4 gap-6 mb-8">
-            <!-- Debug info -->
-            <div class="col-span-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded text-sm border border-blue-300 dark:border-blue-700">
-                <strong>🔍 Debug:</strong> 
-                Loading = {{ loading }} | 
-                Stats = {{ stats !== null ? 'CHARGÉ' : 'NULL' }} | 
-                @if (stats) {
-                    Utilisateurs: {{ stats.users.total }} | 
-                    Sessions actives: {{ stats.sessions.active }} | 
-                    Produits: {{ stats.products.total }} |
-                    platformStats.length: {{ platformStats.length }}
-                }
-            </div>
-            
             @for (stat of platformStats; track stat.label) {
             <z-card>
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm text-muted-foreground mb-1">{{ stat.label }}</p>
                         <p class="text-3xl font-bold">{{ stat.value }}</p>
-                        <p class="text-xs text-red-500">Raw: {{ stat.value }}</p>
                     </div>
                     <i class='bx {{ stat.icon }} text-4xl {{ stat.color }}'></i>
                 </div>
@@ -122,7 +108,7 @@
                     </div>
                 } @else {
                     <div class="space-y-3">
-                        @for (session of recentSessions; track session.id) {
+                        @for (session of recentSessions; track $index) {
                             <div class="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -163,7 +149,7 @@
                     </div>
                 } @else {
                     <div class="space-y-3">
-                        @for (activity of activities; track activity.entity_id + activity.type) {
+                        @for (activity of activities; track $index) {
                             <div class="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
                                 <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                                     <i class='bx {{ getActivityIcon(activity.type) }} text-primary'></i>

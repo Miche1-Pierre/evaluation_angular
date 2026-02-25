@@ -11,6 +11,7 @@ import { ZardCardComponent } from '../../shared/components/card/card.component';
 import { ZardInputDirective } from '../../shared/components/input/input.directive';
 import { ZardFormLabelComponent } from '../../shared/components/form/form.component';
 import { ThemeToggleComponent } from '../../core/components/theme-toggle/theme-toggle.component';
+import { AppHeaderComponent, ActionButton } from '../../shared/components/header/app-header.component';
 
 @Component({
   selector: 'app-create-session',
@@ -23,6 +24,7 @@ import { ThemeToggleComponent } from '../../core/components/theme-toggle/theme-t
     ZardInputDirective,
     ZardFormLabelComponent,
     ThemeToggleComponent,
+    AppHeaderComponent,
   ],
   templateUrl: './create-session.component.html',
   styleUrls: ['./create-session.component.css'],
@@ -55,6 +57,16 @@ export class CreateSessionComponent implements OnInit {
     { value: 'public', label: 'Publique', description: 'Visible et accessible par tous' },
     { value: 'private', label: 'Privée', description: 'Accessible uniquement sur invitation' },
     { value: 'friends_only', label: 'Amis uniquement', description: 'Visible et accessible par vos amis' },
+  ];
+
+  // Action buttons pour le header
+  readonly headerActions: ActionButton[] = [
+    {
+      label: 'Retour',
+      icon: 'bx-arrow-back',
+      routerLink: '/sessions',
+      type: 'outline'
+    }
   ];
 
   // Computed signal pour savoir si on peut continuer

@@ -1,29 +1,21 @@
 <div class="min-h-screen bg-muted/50">
     <!-- Header -->
-    <header
-        class="bg-background border-b">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-4">
-                    <img src="/logo.svg" alt="Logo" class="h-10 w-10" />
-                    <h1
-                        class="text-2xl font-bold bg-linear-to-r from-primary to-orange-500 bg-clip-text text-transparent">
-                        Créer une session
-                    </h1>
-                </div>
-                <div class="flex items-center gap-3">
-                    <app-theme-toggle />
-                    <a [routerLink]="['/sessions']" z-button zType="outline" zSize="sm">
-                        <i class='bx bx-arrow-back'></i>
-                        Retour
-                    </a>
-                </div>
-            </div>
-        </div>
-    </header>
+    <app-header 
+        [logoLink]="'/dashboard'"
+        [actionButtons]="headerActions"
+        [showThemeToggle]="true">
+    </app-header>
 
     <!-- Main Content -->
     <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold mb-2">
+                <i class='bx bx-game mr-2'></i>
+                Créer une session
+            </h1>
+            <p class="text-muted-foreground">Configurez votre partie et sélectionnez les produits</p>
+        </div>
+
         <form [formGroup]="sessionForm" (ngSubmit)="onSubmit()" class="space-y-6">
             <!-- Error Message -->
             @if (error()) {
