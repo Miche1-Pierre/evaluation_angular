@@ -123,11 +123,23 @@
         </div>
 
         <!-- Recent Activity -->
-        <z-card [zTitle]="'Activité Récente'" [zDescription]="'Vos dernières parties'">
+        <z-card [zTitle]="'Activité Récente'" [zDescription]="'Vos performances des 14 derniers jours'">
+            @if (isLoadingActivity()) {
             <div class="text-center py-12 text-muted-foreground">
-                <p>Aucune activité récente</p>
+                <i class='bx bx-loader-alt bx-spin text-4xl'></i>
+                <p class="mt-4">Chargement de votre activité...</p>
+            </div>
+            } @else if (activityData().length === 0 || activityData().every(d => d.sessions_completed === 0)) {
+            <div class="text-center py-12 text-muted-foreground">
+                <i class='bx bx-bar-chart text-4xl'></i>
+                <p class="mt-4">Aucune activité récente</p>
                 <p class="text-sm mt-2">Commencez à jouer pour voir vos statistiques ici !</p>
             </div>
+            } @else {
+            <div class="w-full" style="height: 300px;">
+                <canvas #activityChart></canvas>
+            </div>
+            }
         </z-card>
     </main>
 </div>

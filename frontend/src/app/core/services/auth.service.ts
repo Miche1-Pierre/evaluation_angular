@@ -33,6 +33,13 @@ export interface LoginDTO {
   password: string;
 }
 
+export interface UserActivity {
+  date: string;
+  sessions_completed: number;
+  total_score: number;
+  avg_score: number;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -155,5 +162,12 @@ export class AuthService {
         this.currentUserSubject.next(user);
       })
     );
+  }
+
+  /**
+   * Récupère l'activité de l'utilisateur pour afficher un graphique
+   */
+  getActivity(days: number = 30): Observable<UserActivity[]> {
+    return this.http.get<UserActivity[]>(`${this.API_URL}/auth/activity?days=${days}`);
   }
 }

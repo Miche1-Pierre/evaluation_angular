@@ -1,6 +1,5 @@
 import { Router, Request, Response } from "express";
 import { pool } from "../config/database";
-import { AuthRequest } from "../types/auth.types";
 import { authMiddleware } from "../middleware/auth.middleware";
 import {
   hashPassword,
@@ -11,6 +10,7 @@ import {
   isValidUsername,
 } from "../utils/auth.utils";
 import {
+  AuthRequest,
   RegisterDTO,
   LoginDTO,
   AuthResponse,
@@ -228,6 +228,62 @@ router.get(
     } catch (error) {
       console.error("Error in /me:", error);
       res.status(500).json({ error: "Failed to get user info" });
+    }
+  }
+);
+
+/**
+ * GET /api/auth/activity
+ * Récupère l'activité de l'utilisateur pour afficher un graphique
+ * Retourne les sessions complétées par jour sur les 30 derniers jours
+ */
+router.get(
+  "/activity",
+  authMiddleware,
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const userId = req.user!.id;
+      const days = Number.parseInt(req.query.days as string) || 30;
+
+      // Récupérer les participations complétées groupées par jour
+      const result = await pool.query(
+        `SELECT 
+          DATE(p.updated_at) as date,
+          COUNT(*) as sessions_completed,
+          COALESCE(SUM(p.session_score), 0) as total_score,
+          COALESCE(AVG(p.session_score), 0) as avg_score
+        FROM participants p
+        WHERE p.user_id = $1 
+          AND p.completed = true
+          AND p.updated_at >= NOW() - INTERVAL '1 day' * $2
+        GROUP BY DATE(p.updated_at)
+        ORDER BY DATE(p.updated_at) ASC`,
+        [userId, days]
+      );
+
+      // Créer un tableau avec tous les jours (même ceux sans activité)
+      const activity = [];
+      const today = new Date();
+      
+      for (let i = days - 1; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        
+        const dayData = result.rows.find(row => row.date === dateStr);
+        
+        activity.push({
+          date: dateStr,
+          sessions_completed: dayData ? Number.parseInt(dayData.sessions_completed) : 0,
+          total_score: dayData ? Number.parseInt(dayData.total_score) : 0,
+          avg_score: dayData ? Number.parseFloat(dayData.avg_score).toFixed(1) : 0
+        });
+      }
+
+      res.json(activity);
+    } catch (error) {
+      console.error("Error in /activity:", error);
+      res.status(500).json({ error: "Erreur lors de la récupération de l'activité" });
     }
   }
 );
