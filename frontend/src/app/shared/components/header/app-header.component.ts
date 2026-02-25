@@ -2,7 +2,6 @@ import { Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ZardButtonComponent } from '../button/button.component';
 import { ThemeToggleComponent } from '../../../core/components/theme-toggle/theme-toggle.component';
-import { NgTemplateOutlet } from '@angular/common';
 
 export interface NavLink {
   label: string;
@@ -22,7 +21,7 @@ export interface ActionButton {
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [RouterLink, ZardButtonComponent, ThemeToggleComponent, NgTemplateOutlet],
+  imports: [RouterLink, ZardButtonComponent, ThemeToggleComponent],
   template: `
     <header class="border-b sticky top-0 z-50 w-full backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div class="container mx-auto px-4 py-4">
