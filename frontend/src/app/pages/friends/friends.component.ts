@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { toast } from 'ngx-sonner';
 import { FriendsService, Friend, FriendRequest } from '../../core/services/friends.service';
 import { ZardButtonComponent } from '../../shared/components/button/button.component';
 import { ZardCardComponent } from '../../shared/components/card/card.component';
@@ -117,6 +118,10 @@ export class FriendsComponent implements OnInit {
     const email = this.requestForm.value.receiver_email;
     this.friendsService.sendFriendRequest({ receiver_email: email }).subscribe({
       next: (response) => {
+        toast.success('👋 Demande envoyée !', {
+          description: response.message,
+          duration: 3000,
+        });
         this.successMessage.set(response.message);
         this.requestForm.reset();
         this.loadSentRequests();
@@ -124,7 +129,12 @@ export class FriendsComponent implements OnInit {
       },
       error: (err) => {
         console.error('Erreur lors de l\'envoi de la demande:', err);
-        this.error.set(err.error?.error || 'Impossible d\'envoyer la demande d\'ami.');
+        const errorMsg = err.error?.error || 'Impossible d\'envoyer la demande d\'ami.';
+        this.error.set(errorMsg);
+        toast.error('Erreur', {
+          description: errorMsg,
+          duration: 4000,
+        });
         this.submitting.set(false);
       },
     });
@@ -133,12 +143,21 @@ export class FriendsComponent implements OnInit {
   acceptRequest(requestId: number): void {
     this.friendsService.acceptFriendRequest(requestId).subscribe({
       next: (response) => {
+        toast.success('✅ Demande acceptée !', {
+          description: 'Vous êtes maintenant amis',
+          duration: 3000,
+        });
         this.successMessage.set(response.message);
         this.loadAllData();
       },
       error: (err) => {
         console.error('Erreur lors de l\'acceptation:', err);
-        this.error.set(err.error?.error || 'Impossible d\'accepter la demande.');
+        const errorMsg = err.error?.error || 'Impossible d\'accepter la demande.';
+        this.error.set(errorMsg);
+        toast.error('Erreur', {
+          description: errorMsg,
+          duration: 4000,
+        });
       },
     });
   }
@@ -146,12 +165,20 @@ export class FriendsComponent implements OnInit {
   rejectRequest(requestId: number): void {
     this.friendsService.rejectFriendRequest(requestId).subscribe({
       next: (response) => {
+        toast.info('Demande refusée', {
+          duration: 2000,
+        });
         this.successMessage.set(response.message);
         this.loadPendingRequests();
       },
       error: (err) => {
         console.error('Erreur lors du refus:', err);
-        this.error.set(err.error?.error || 'Impossible de refuser la demande.');
+        const errorMsg = err.error?.error || 'Impossible de refuser la demande.';
+        this.error.set(errorMsg);
+        toast.error('Erreur', {
+          description: errorMsg,
+          duration: 4000,
+        });
       },
     });
   }
@@ -159,11 +186,19 @@ export class FriendsComponent implements OnInit {
   cancelRequest(requestId: number): void {
     this.friendsService.deleteFriendRequest(requestId).subscribe({
       next: () => {
+        toast.info('Demande annulée', {
+          duration: 2000,
+        });
         this.successMessage.set('Demande annulée avec succès');
         this.loadSentRequests();
       },
       error: () => {
-        this.error.set('Impossible d\'annuler la demande.');
+        const errorMsg = 'Impossible d\'annuler la demande.';
+        this.error.set(errorMsg);
+        toast.error('Erreur', {
+          description: errorMsg,
+          duration: 4000,
+        });
       },
     });
   }

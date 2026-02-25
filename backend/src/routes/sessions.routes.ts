@@ -559,7 +559,7 @@ router.post(
 
       if (
         session.max_participants &&
-        parseInt(participantCount.rows[0].count) >= session.max_participants
+        Number.parseInt(participantCount.rows[0].count) >= session.max_participants
       ) {
         await client.query("ROLLBACK");
         res.status(400).json({ error: "La session a atteint le nombre maximum de participants" });
@@ -794,7 +794,7 @@ router.post(
         return;
       }
 
-      const actualPrice = parseFloat(productInSession.rows[0].price);
+      const actualPrice = Number.parseFloat(productInSession.rows[0].price);
 
       // Vérifier que l'utilisateur n'a pas déjà répondu à ce produit
       const existingAnswer = await client.query(
@@ -809,9 +809,15 @@ router.post(
         return;
       }
 
-      // Calculer le score: 100 - |différence|, minimum 0
-      const difference = Math.abs(parseFloat(guessed_price) - actualPrice);
-      const score = Math.max(0, Math.round(100 - difference));
+      // Calculer le score basé sur le pourcentage d'erreur
+      // Formule: score = 100 - (|guessed - actual| / actual * 100)
+      // Exemples:
+      //   - Prix: 400000€, Deviné: 380000€ → erreur: 5% → score: 95
+      //   - Prix: 1000€, Deviné: 900€ → erreur: 10% → score: 90
+      //   - Prix: 50€, Deviné: 100€ → erreur: 100% → score: 0
+      const guessedPriceNum = Number.parseFloat(guessed_price);
+      const errorPercentage = Math.abs(guessedPriceNum - actualPrice) / actualPrice * 100;
+      const score = Math.max(0, Math.min(100, Math.round(100 - errorPercentage)));
 
       // Enregistrer la réponse
       const answerResult = await client.query(
@@ -830,7 +836,7 @@ router.post(
         [participant.id],
       );
 
-      const totalAnswered = parseInt(answerCount.rows[0].count);
+      const totalAnswered = Number.parseInt(answerCount.rows[0].count);
       const isCompleted = totalAnswered >= 4;
 
       // Mettre à jour le participant
@@ -924,8 +930,8 @@ router.get(
       const leaderboard = result.rows.map((row, index) => ({
         rank: index + 1,
         ...row,
-        session_score: parseInt(row.session_score),
-        answers_count: parseInt(row.answers_count),
+        session_score: Number.parseInt(row.session_score),
+        answers_count: Number.parseInt(row.answers_count),
       }));
 
       res.json(leaderboard);

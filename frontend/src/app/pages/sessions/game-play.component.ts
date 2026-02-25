@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { toast } from 'ngx-sonner';
 import { GameService, SessionProduct, AnswerResponse } from '../../core/services/game.service';
 import { SessionsService } from '../../core/services/sessions.service';
 import { ZardButtonComponent } from '../../shared/components/button/button.component';
@@ -139,8 +140,18 @@ export class GamePlayComponent implements OnInit {
           this.sessionScore.set(response.session_score);
           this.gameCompleted.set(response.completed);
 
+          // Afficher un toast avec le score obtenu
+          toast.success(`+${response.score} points !`, {
+            description: `Prix réel : ${this.formatPrice(response.actual_price)} | Votre score : ${response.session_score}`,
+            duration: 3000,
+          });
+
           // Si le jeu est terminé, rediriger vers le leaderboard après 2 secondes
           if (response.completed) {
+            toast.success('🎉 Félicitations ! Session terminée', {
+              description: `Score final : ${response.session_score} points`,
+              duration: 4000,
+            });
             setTimeout(() => {
               this.router.navigate(['/sessions', id, 'leaderboard']);
             }, 2000);
@@ -150,7 +161,12 @@ export class GamePlayComponent implements OnInit {
         },
         error: (err) => {
           console.error('Erreur lors de la soumission:', err);
-          this.error.set(err.error?.message || 'Impossible de soumettre la réponse.');
+          const errorMsg = err.error?.error || err.error?.message || 'Impossible de soumettre la réponse.';
+          this.error.set(errorMsg);
+          toast.error('Erreur de soumission', {
+            description: errorMsg,
+            duration: 4000,
+          });
           this.submitting.set(false);
         },
       });
