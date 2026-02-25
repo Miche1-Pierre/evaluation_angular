@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 export interface Session {
   id: number;
@@ -60,7 +61,9 @@ export class SessionsService {
    * Crée une nouvelle session
    */
   createSession(data: CreateSessionDTO): Observable<Session> {
-    return this.http.post<Session>(`${this.API_URL}/sessions`, data);
+    return this.http.post<{ message: string; session: Session }>(`${this.API_URL}/sessions`, data).pipe(
+      map(response => response.session)
+    );
   }
 
   /**

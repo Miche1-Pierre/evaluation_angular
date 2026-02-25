@@ -198,12 +198,23 @@ export class CreateSessionComponent implements OnInit {
     this.sessionsService.createSession(sessionData).subscribe({
       next: (session) => {
         console.log('Session créée avec succès:', session);
-        this.router.navigate(['/sessions', session.id]);
+        // Rejoindre automatiquement la session après création
+        this.sessionsService.joinSession(session.id).subscribe({
+          next: () => {
+            // Rediriger vers la page de jeu
+            this.router.navigate(['/sessions', session.id, 'play']);
+          },
+          error: (joinErr) => {
+            console.error('Erreur lors de la tentative de rejoindre la session:', joinErr);
+            // Même en cas d'erreur de join, rediriger vers la liste des sessions
+            this.router.navigate(['/sessions']);
+          }
+        });
       },
       error: (err) => {
         console.error('Erreur lors de la création de la session:', err);
         this.error.set(
-          err.error?.message || 'Une erreur est survenue lors de la création de la session.'
+          err.error?.error || err.error?.message || 'Une erreur est survenue lors de la création de la session.'
         );
         this.loading.set(false);
       },
