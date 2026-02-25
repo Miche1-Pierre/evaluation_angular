@@ -6,6 +6,7 @@ import { ZardButtonComponent } from '../../shared/components/button/button.compo
 import { ZardCardComponent } from '../../shared/components/card/card.component';
 import { ThemeToggleComponent } from '../../core/components/theme-toggle/theme-toggle.component';
 import { CommonModule } from '@angular/common';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -83,48 +84,45 @@ export class AdminDashboardComponent implements OnInit {
     this.loading = true;
     this.error = null;
 
-    // Charger les statistiques
-    this.adminService.getStats().subscribe({
-      next: (stats) => {
-        console.log('📊 Stats reçues:', stats);
-        this.stats = stats;
-        this.updatePlatformStats(stats);
+    // Charger toutes les données en parallèle
+    forkJoin({
+      stats: this.adminService.getStats(),
+      sessions: this.adminService.getRecentSessions(5),
+      activities: this.adminService.getActivity(10)
+    }).subscribe({
+      next: (data) => {
+        console.log('📊 Données reçues:', data);
+        
+        // Stats
+        this.stats = data.stats;
+        this.updatePlatformStats(data.stats);
+        
+        // Sessions
+        this.recentSessions = data.sessions;
+        
+        // Activités
+        this.activities = data.activities;
+        
+        this.loading = false;
+        console.log('✅ Chargement terminé', {
+          stats: this.stats,
+          platformStats: this.platformStats,
+          sessions: this.recentSessions.length,
+          activities: this.activities.length
+        });
       },
       error: (error) => {
-        console.error('❌ Erreur lors du chargement des stats:', error);
+        console.error('❌ Erreur lors du chargement:', error);
         this.error = error.status === 403 
           ? 'Accès refusé. Vous devez être administrateur pour accéder à cette page.'
           : 'Erreur lors du chargement des données administrateur.';
         this.loading = false;
       }
     });
-
-    // Charger les sessions récentes
-    this.adminService.getRecentSessions(5).subscribe({
-      next: (sessions) => {
-        console.log('🎮 Sessions récentes reçues:', sessions);
-        this.recentSessions = sessions;
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('❌ Erreur lors du chargement des sessions récentes:', error);
-        this.loading = false;
-      }
-    });
-
-    // Charger l'activité récente
-    this.adminService.getActivity(10).subscribe({
-      next: (activities) => {
-        console.log('📝 Activité récente reçue:', activities);
-        this.activities = activities;
-      },
-      error: (error) => {
-        console.error('❌ Erreur lors du chargement de l\'activité:', error);
-      }
-    });
   }
 
   private updatePlatformStats(stats: AdminStats): void {
+    console.log('🔄 updatePlatformStats appelé avec:', stats);
     this.platformStats = [
       { 
         label: 'Utilisateurs Total', 
@@ -151,6 +149,7 @@ export class AdminDashboardComponent implements OnInit {
         color: 'text-orange-500' 
       },
     ];
+    console.log('✅ platformStats mis à jour:', this.platformStats);
   }
 
   getActivityIcon(type: string): string {
