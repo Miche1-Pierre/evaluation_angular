@@ -112,4 +112,84 @@ router.get(
   },
 );
 
+/**
+ * GET /api/leaderboard/session/:id
+ * Classement d'une session spécifique
+ * Liste tous les participants avec leurs scores
+ */
+router.get(
+  "/session/:id",
+  authMiddleware,
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const { id: sessionId } = req.params;
+      const userId = req.user!.id;
+
+      // Vérifier que la session existe
+      const sessionCheck = await pool.query(
+        "SELECT id, status, visibility, creator_id FROM sessions WHERE id = $1",
+        [sessionId]
+      );
+
+      if (sessionCheck.rows.length === 0) {
+        res.status(404).json({ error: "Session non trouvée" });
+        return;
+      }
+
+      const session = sessionCheck.rows[0];
+
+      // Vérifier les permissions (session publique, créateur, ou participant)
+      const isCreator = session.creator_id === userId;
+      const isPublic = session.visibility === 'public';
+      
+      const participantCheck = await pool.query(
+        "SELECT id FROM participants WHERE session_id = $1 AND user_id = $2",
+        [sessionId, userId]
+      );
+      const isParticipant = participantCheck.rows.length > 0;
+
+      if (!isPublic && !isCreator && !isParticipant) {
+        res.status(403).json({ error: "Vous n'avez pas accès à ce classement" });
+        return;
+      }
+
+      // Récupérer le classement
+      const result = await pool.query(
+        `SELECT 
+          p.id as participant_id,
+          p.user_id,
+          p.session_score,
+          p.completed,
+          u.username,
+          u.email,
+          (SELECT COUNT(*) FROM answers WHERE participant_id = p.id) as answers_count
+         FROM participants p
+         JOIN users u ON u.id = p.user_id
+         WHERE p.session_id = $1
+         ORDER BY p.session_score DESC, p.created_at ASC`,
+        [sessionId]
+      );
+
+      const leaderboard = result.rows.map((row, index) => ({
+        rank: index + 1,
+        participant_id: row.participant_id,
+        user_id: row.user_id,
+        username: row.username,
+        email: row.email,
+        session_score: Number.parseInt(row.session_score),
+        answers_count: Number.parseInt(row.answers_count),
+        completed: row.completed,
+        is_me: row.user_id === userId
+      }));
+
+      res.json(leaderboard);
+    } catch (error) {
+      console.error("Error fetching session leaderboard:", error);
+      res.status(500).json({ 
+        error: "Erreur lors de la récupération du classement de la session" 
+      });
+    }
+  },
+);
+
 export default router;

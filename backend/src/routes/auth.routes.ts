@@ -1,5 +1,7 @@
 import { Router, Request, Response } from "express";
 import { pool } from "../config/database";
+import { AuthRequest } from "../types/auth.types";
+import { authMiddleware } from "../middleware/auth.middleware";
 import {
   hashPassword,
   comparePassword,
@@ -191,13 +193,43 @@ router.post("/login", async (req: Request, res: Response): Promise<void> => {
  * GET /api/auth/me
  * Récupérer les infos de l'utilisateur connecté
  */
-router.get("/me", async (res: Response): Promise<void> => {
-  try {
-    res.status(501).json({ error: "Not implemented yet" });
-  } catch (error) {
-    console.error("Error in /me:", error);
-    res.status(500).json({ error: "Failed to get user info" });
+router.get(
+  "/me",
+  authMiddleware,
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const userId = req.user!.id;
+
+      const result = await pool.query(
+        `SELECT id, username, email, role, total_score, games_played, best_session_score, average_score, created_at
+         FROM users
+         WHERE id = $1`,
+        [userId]
+      );
+
+      if (result.rows.length === 0) {
+        res.status(404).json({ error: "Utilisateur non trouvé" });
+        return;
+      }
+
+      const user = result.rows[0];
+
+      res.json({
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        total_score: Number.parseInt(user.total_score) || 0,
+        games_played: Number.parseInt(user.games_played) || 0,
+        best_session_score: Number.parseInt(user.best_session_score) || 0,
+        average_score: Number.parseFloat(user.average_score) || 0,
+        created_at: user.created_at
+      });
+    } catch (error) {
+      console.error("Error in /me:", error);
+      res.status(500).json({ error: "Failed to get user info" });
+    }
   }
-});
+);
 
 export default router;

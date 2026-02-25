@@ -17,7 +17,7 @@ router.post(
     const client = await pool.connect();
     
     try {
-      const { name, difficulty, visibility, max_participants } = req.body;
+      const { name, difficulty, visibility, max_participants, product_ids } = req.body;
       const userId = req.user!.id;
 
       // Validation
@@ -45,15 +45,36 @@ router.post(
 
       const session = sessionResult.rows[0];
 
-      // Sélectionner 4 produits aléatoires
-      const productsResult = await client.query(
-        `SELECT id FROM products ORDER BY RANDOM() LIMIT 4`
-      );
+      // Sélectionner les produits (fournis ou aléatoires)
+      let productIdsToUse: number[] = [];
 
-      if (productsResult.rows.length < 4) {
-        await client.query('ROLLBACK');
-        res.status(400).json({ error: "Pas assez de produits dans la base (minimum 4 requis)" });
-        return;
+      if (product_ids && Array.isArray(product_ids) && product_ids.length === 4) {
+        // Vérifier que tous les product_ids existent
+        const validationResult = await client.query(
+          `SELECT id FROM products WHERE id = ANY($1::int[])`,
+          [product_ids]
+        );
+
+        if (validationResult.rows.length !== 4) {
+          await client.query('ROLLBACK');
+          res.status(400).json({ error: "Certains produits spécifiés n'existent pas" });
+          return;
+        }
+
+        productIdsToUse = product_ids;
+      } else {
+        // Sélectionner 4 produits aléatoires
+        const productsResult = await client.query(
+          `SELECT id FROM products ORDER BY RANDOM() LIMIT 4`
+        );
+
+        if (productsResult.rows.length < 4) {
+          await client.query('ROLLBACK');
+          res.status(400).json({ error: "Pas assez de produits dans la base (minimum 4 requis)" });
+          return;
+        }
+
+        productIdsToUse = productsResult.rows.map((row: any) => row.id);
       }
 
       // Insérer les produits de la session
@@ -61,7 +82,7 @@ router.post(
         await client.query(
           `INSERT INTO session_products (session_id, product_id, position)
            VALUES ($1, $2, $3)`,
-          [session.id, productsResult.rows[i].id, i + 1]
+          [session.id, productIdsToUse[i], i + 1]
         );
       }
 
@@ -79,7 +100,10 @@ router.post(
         [session.id]
       );
 
-      res.status(201).json(fullSessionResult.rows[0]);
+      res.status(201).json({ 
+        message: "Session créée avec succès",
+        session: fullSessionResult.rows[0] 
+      });
     } catch (error) {
       await client.query('ROLLBACK');
       console.error("Error creating session:", error);
