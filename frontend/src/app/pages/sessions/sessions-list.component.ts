@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
+import { toast } from 'ngx-sonner';
 import { SessionsService, Session } from '../../core/services/sessions.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ZardButtonComponent } from '../../shared/components/button/button.component';
@@ -117,13 +118,19 @@ export class SessionsListComponent implements OnInit {
   joinSession(sessionId: number): void {
     this.sessionsService.joinSession(sessionId).subscribe({
       next: (response) => {
-        alert(response.message);
+        toast.success(response.message, {
+          description: 'Vous allez être redirigé vers la session',
+          duration: 3000,
+        });
         this.loadSessions(); // Recharger pour mettre à jour les compteurs
         this.router.navigate(['/sessions', sessionId, 'play']);
       },
       error: (err) => {
         const errorMessage = err.error?.error || 'Erreur lors de la connexion à la session';
-        alert(errorMessage);
+        toast.error('Erreur', {
+          description: errorMessage,
+          duration: 4000,
+        });
       },
     });
   }
