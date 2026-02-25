@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService, User } from '../../core/services/auth.service';
 import { AdminService, AdminStats, RecentSession, Activity } from '../../core/services/admin.service';
@@ -19,6 +19,7 @@ export class AdminDashboardComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly adminService = inject(AdminService);
   private readonly router = inject(Router);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   currentUser: User | null = null;
   stats: AdminStats | null = null;
@@ -102,6 +103,10 @@ export class AdminDashboardComponent implements OnInit {
         
         // Activités
         this.activities = data.activities;
+        
+        
+        // Forcer la détection des changements
+        this.cdr.detectChanges();
         
         this.loading = false;
         console.log('✅ Chargement terminé', {
