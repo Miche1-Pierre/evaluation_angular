@@ -1,0 +1,1016 @@
+{
+    "info": {
+        "name": "Pi & Rho's Games API",
+        "description": "API complète pour l'évaluation de prix de produits - Toutes les routes testables",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "🔐 Auth",
+            "description": "Authentification et gestion utilisateur",
+            "item": [
+                {
+                    "name": "Register User",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 201) {",
+                                    "    const response = pm.response.json();",
+                                    "    pm.environment.set('token', response.token);",
+                                    "    pm.environment.set('userId', response.user.id);",
+                                    "    pm.environment.set('username', response.user.username);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"newuser@test.com\",\n  \"username\": \"New User\",\n  \"password\": \"password123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/register",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "auth", "register"]
+                        }
+                    }
+                },
+                {
+                    "name": "Login Alice (User)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    const response = pm.response.json();",
+                                    "    pm.environment.set('token', response.token);",
+                                    "    pm.environment.set('userId', response.user.id);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"alice@test.com\",\n  \"password\": \"password123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/login",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "auth", "login"]
+                        }
+                    }
+                },
+                {
+                    "name": "Login Bob (User)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    const response = pm.response.json();",
+                                    "    pm.environment.set('token', response.token);",
+                                    "    pm.environment.set('userId', response.user.id);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"bob@test.com\",\n  \"password\": \"password123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/login",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "auth", "login"]
+                        }
+                    }
+                },
+                {
+                    "name": "Login Charlie (User)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    const response = pm.response.json();",
+                                    "    pm.environment.set('token', response.token);",
+                                    "    pm.environment.set('userId', response.user.id);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"charlie@test.com\",\n  \"password\": \"password123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/login",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "auth", "login"]
+                        }
+                    }
+                },
+                {
+                    "name": "Login Diana (User)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    const response = pm.response.json();",
+                                    "    pm.environment.set('token', response.token);",
+                                    "    pm.environment.set('userId', response.user.id);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"diana@test.com\",\n  \"password\": \"password123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/login",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "auth", "login"]
+                        }
+                    }
+                },
+                {
+                    "name": "Login Admin",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    const response = pm.response.json();",
+                                    "    pm.environment.set('token', response.token);",
+                                    "    pm.environment.set('userId', response.user.id);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"admin@dfs.com\",\n  \"password\": \"password123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/login",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "auth", "login"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "📦 Products",
+            "description": "Gestion des produits",
+            "item": [
+                {
+                    "name": "Get All Products",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/products",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "products"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Product by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/products/1",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "products", "1"]
+                        }
+                    }
+                },
+                {
+                    "name": "Create Product (Admin)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "POST",
+                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Test Product\",\n  \"price\": 99.99,\n  \"image_url\": \"https://via.placeholder.com/400\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/products",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "products"]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Product (Admin)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "PUT",
+                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Updated Product\",\n  \"price\": 149.99,\n  \"image_url\": \"https://via.placeholder.com/400\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/products/21",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "products", "21"]
+                        }
+                    }
+                },
+                {
+                    "name": "Delete Product (Admin)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/products/21",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "products", "21"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "🎮 Sessions",
+            "description": "Gestion des sessions de jeu",
+            "item": [
+                {
+                    "name": "Create Public Session",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 201) {",
+                                    "    const response = pm.response.json();",
+                                    "    pm.environment.set('sessionId', response.id);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "POST",
+                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Test Public Session\",\n  \"difficulty\": \"medium\",\n  \"visibility\": \"public\",\n  \"max_participants\": 10\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/sessions",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "sessions"]
+                        }
+                    }
+                },
+                {
+                    "name": "Create Private Session",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "POST",
+                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Private VIP Session\",\n  \"difficulty\": \"hard\",\n  \"visibility\": \"private\",\n  \"max_participants\": 5\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/sessions",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "sessions"]
+                        }
+                    }
+                },
+                {
+                    "name": "Create Friends Only Session",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "POST",
+                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Friends Only Session\",\n  \"difficulty\": \"easy\",\n  \"visibility\": \"friends_only\",\n  \"max_participants\": 8\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/sessions",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "sessions"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get All Sessions (Authenticated)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/sessions",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "sessions"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Sessions - Public Only (No Auth)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/sessions",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "sessions"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Active Sessions",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/sessions?status=active",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "sessions"],
+                            "query": [{"key": "status", "value": "active"}]
+                        }
+                    }
+                },
+                {
+                    "name": "Get My Created Sessions",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/sessions?creator_id={{userId}}",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "sessions"],
+                            "query": [{"key": "creator_id", "value": "{{userId}}"}]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Session by ID",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/sessions/{{sessionId}}",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "sessions", "{{sessionId}}"]
+                        }
+                    }
+                },
+                {
+                    "name": "Join Session",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 201) {",
+                                    "    const response = pm.response.json();",
+                                    "    pm.environment.set('participantId', response.participant.id);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/sessions/{{sessionId}}/join",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "sessions", "{{sessionId}}", "join"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Session Participants",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/sessions/{{sessionId}}/participants",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "sessions", "{{sessionId}}", "participants"]
+                        }
+                    }
+                },
+                {
+                    "name": "Delete Session (Creator or Admin)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/sessions/{{sessionId}}",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "sessions", "{{sessionId}}"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "👥 Friends",
+            "description": "Système d'amis : demandes, acceptation, recherche",
+            "item": [
+                {
+                    "name": "Get Friends List",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    const friends = pm.response.json();",
+                                    "    if (friends.length > 0) {",
+                                    "        pm.environment.set('friendId', friends[0].id);",
+                                    "        console.log('Premier ami:', friends[0].username, '(ID:', friends[0].id, ')');",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/friends",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "friends"]
+                        },
+                        "description": "Liste tous les amis de l'utilisateur connecté. Alice→Bob, Charlie→Diana, Bob→Charlie dans les données de test."
+                    }
+                },
+                {
+                    "name": "Search Users",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/friends/search?q=diana",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "friends", "search"],
+                            "query": [{"key": "q", "value": "diana"}]
+                        },
+                        "description": "Rechercher des utilisateurs par nom ou email (min 2 caractères). Affiche is_friend et request_status (sent/received/null)."
+                    }
+                },
+                {
+                    "name": "Send Friend Request",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 201) {",
+                                    "    const response = pm.response.json();",
+                                    "    if (response.request && response.request.id) {",
+                                    "        pm.environment.set('friendRequestId', response.request.id);",
+                                    "        console.log('Demande envoyée, ID:', response.request.id);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "POST",
+                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"receiver_email\": \"diana@test.com\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/friends/request",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "friends", "request"]
+                        },
+                        "description": "Envoyer une demande d'ami. Acceptation automatique si demande inverse existe. Testé : Alice → Diana (pas encore amies)."
+                    }
+                },
+                {
+                    "name": "Get Pending Requests (Received)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    const requests = pm.response.json();",
+                                    "    if (requests.length > 0) {",
+                                    "        pm.environment.set('friendRequestId', requests[0].id);",
+                                    "        console.log('Demande pending de:', requests[0].sender_username, '(ID:', requests[0].id, ')');",
+                                    "    } else {",
+                                    "        console.log('Aucune demande pending reçue');",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/friends/requests",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "friends", "requests"]
+                        },
+                        "description": "Demandes reçues en attente. Données test : Alice reçoit une demande de Diana (pending). Auto-save du premier ID."
+                    }
+                },
+                {
+                    "name": "Get Sent Requests",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/friends/requests/sent",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "friends", "requests", "sent"]
+                        }
+                    }
+                },
+                {
+                    "name": "Accept Friend Request",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/friends/requests/{{friendRequestId}}/accept",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "friends", "requests", "{{friendRequestId}}", "accept"]
+                        },
+                        "description": "Accepter une demande reçue. Utilise {{friendRequestId}} auto-sauvegardé par 'Get Pending Requests'. Crée une amitié bidirectionnelle."
+                    }
+                },
+                {
+                    "name": "Reject Friend Request",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/friends/requests/{{friendRequestId}}/reject",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "friends", "requests", "{{friendRequestId}}", "reject"]
+                        },
+                        "description": "Rejeter une demande reçue. Utilise {{friendRequestId}} auto-sauvegardé. Peut être réessayé par l'expéditeur plus tard."
+                    }
+                },
+                {
+                    "name": "Remove Friend",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/friends/{{friendId}}",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "friends", "{{friendId}}"]
+                        },
+                        "description": "Supprimer un ami. Utilise {{friendId}} auto-sauvegardé par 'Get Friends List'. Ex: Si connecté en Alice, friendId=3 (Bob)."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "📨 Invites",
+            "description": "Système d'invitations aux sessions privées",
+            "item": [
+                {
+                    "name": "Invite User to Session",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 201) {",
+                                    "    const response = pm.response.json();",
+                                    "    if (response.invite && response.invite.id) {",
+                                    "        pm.environment.set('inviteId', response.invite.id);",
+                                    "        console.log('Invitation envoyée, ID:', response.invite.id);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "POST",
+                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"invitee_email\": \"alice@test.com\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/sessions/{{sessionId}}/invite",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "sessions", "{{sessionId}}", "invite"]
+                        },
+                        "description": "Inviter un utilisateur à une session. Réservé au créateur ou admin. Auto-save de inviteId. Données test : Session 3 (private) créée par Admin."
+                    }
+                },
+                {
+                    "name": "Get My Invites (Received)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    const invites = pm.response.json();",
+                                    "    if (invites.length > 0) {",
+                                    "        const pendingInvites = invites.filter(i => i.status === 'pending');",
+                                    "        if (pendingInvites.length > 0) {",
+                                    "            pm.environment.set('inviteId', pendingInvites[0].id);",
+                                    "            console.log('Invitation pending de:', pendingInvites[0].inviter_username, '(ID:', pendingInvites[0].id, ')');",
+                                    "        }",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/invites",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "invites"]
+                        },
+                        "description": "Liste des invitations reçues. Données test : Admin a invité Alice à la session 3 (status=accepted), Bob à la session 3 (status=pending). Auto-save du premier inviteId pending."
+                    }
+                },
+                {
+                    "name": "Get Pending Invites Only",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/invites?status=pending",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "invites"],
+                            "query": [{"key": "status", "value": "pending"}]
+                        },
+                        "description": "Filtre uniquement les invitations en attente. Statuts disponibles : pending, accepted, rejected."
+                    }
+                },
+                {
+                    "name": "Get Sent Invites",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/invites/sent",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "invites", "sent"]
+                        },
+                        "description": "Liste des invitations envoyées par l'utilisateur connecté. Affiche tous les statuts."
+                    }
+                },
+                {
+                    "name": "Get Session Invites",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/sessions/{{sessionId}}/invites",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "sessions", "{{sessionId}}", "invites"]
+                        },
+                        "description": "Liste des invitations pour une session spécifique. Réservé au créateur ou admin."
+                    }
+                },
+                {
+                    "name": "Accept Invite",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/invites/{{inviteId}}/accept",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "invites", "{{inviteId}}", "accept"]
+                        },
+                        "description": "Accepter une invitation reçue. Rejoint automatiquement la session. Utilise {{inviteId}} auto-sauvegardé par 'Get My Invites'."
+                    }
+                },
+                {
+                    "name": "Reject Invite",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/invites/{{inviteId}}/reject",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "invites", "{{inviteId}}", "reject"]
+                        },
+                        "description": "Rejeter une invitation reçue. Utilise {{inviteId}} auto-sauvegardé."
+                    }
+                },
+                {
+                    "name": "Cancel/Delete Invite",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/invites/{{inviteId}}",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "invites", "{{inviteId}}"]
+                        },
+                        "description": "Annuler/supprimer une invitation. Réservé à l'inviter ou admin."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "🎮 Game",
+            "description": "Gameplay - Réponses, scoring et classements",
+            "item": [
+                {
+                    "name": "Get Session Products (without prices)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/sessions/{{sessionId}}/products",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "sessions", "{{sessionId}}", "products"]
+                        },
+                        "description": "Récupère les 4 produits de la session SANS montrer les prix. Accessible uniquement aux participants."
+                    }
+                },
+                {
+                    "name": "Submit Answer",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    const response = pm.response.json();",
+                                    "    console.log('Score:', response.score);",
+                                    "    console.log('Actual Price:', response.actual_price);",
+                                    "    console.log('Session Score:', response.session_score);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "POST",
+                        "header": [{"key": "Content-Type", "value": "application/json"}],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"product_id\": 1,\n  \"guessed_price\": 25.50\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/sessions/{{sessionId}}/answer",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "sessions", "{{sessionId}}", "answer"]
+                        },
+                        "description": "Soumet une estimation de prix. Calcule automatiquement le score: 100 - |prix_estimé - prix_réel|. Met à jour le score du participant."
+                    }
+                },
+                {
+                    "name": "Get Session Leaderboard",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/sessions/{{sessionId}}/leaderboard",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "sessions", "{{sessionId}}", "leaderboard"]
+                        },
+                        "description": "Classement de tous les participants de la session, triés par score décroissant."
+                    }
+                },
+                {
+                    "name": "Get Global Leaderboard",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/leaderboard/global?limit=50",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "leaderboard", "global"],
+                            "query": [
+                                {
+                                    "key": "limit",
+                                    "value": "50",
+                                    "description": "Nombre de résultats (défaut: 50, max: 100)"
+                                }
+                            ]
+                        },
+                        "description": "Classement global de tous les joueurs, basé sur le score total cumulé."
+                    }
+                },
+                {
+                    "name": "Get Friends Leaderboard",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/leaderboard/friends",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "leaderboard", "friends"]
+                        },
+                        "description": "Classement filtré aux amis de l'utilisateur connecté + lui-même."
+                    }
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:3000",
+            "type": "string"
+        }
+    ]
+}

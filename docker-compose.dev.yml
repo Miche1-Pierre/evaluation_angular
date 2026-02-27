@@ -1,0 +1,104 @@
+version: '3.8'
+
+# ============================================
+# Docker Compose pour le DÉVELOPPEMENT
+# Hot reload activé pour backend et frontend
+# ============================================
+
+services:
+  # ============================================
+  # PostgreSQL Database
+  # ============================================
+  db:
+    image: postgres:16-alpine
+    container_name: pirho-db-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-angular}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+      - ./backend/src/db/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+    ports:
+      - "${DB_PORT:-5433}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-angular}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - pirho-network-dev
+
+  # ============================================
+  # Backend API (Development mode avec hot reload)
+  # ============================================
+  backend-dev:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: pirho-backend-dev
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: ${BACKEND_PORT:-3000}
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-angular}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:4200}
+      JWT_SECRET: ${JWT_SECRET:-dev_jwt_secret}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/scripts:/app/scripts
+      - /app/node_modules
+    ports:
+      - "${BACKEND_PORT:-3000}:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - pirho-network-dev
+    command: npm run dev
+
+  # ============================================
+  # Frontend (Development mode avec hot reload)
+  # ============================================
+  frontend-dev:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: pirho-frontend-dev
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - /app/node_modules
+      - /app/.angular
+    ports:
+      - "${FRONTEND_PORT:-4200}:4200"
+    depends_on:
+      - backend-dev
+    networks:
+      - pirho-network-dev
+    command: npm start
+
+# ============================================
+# Networks
+# ============================================
+networks:
+  pirho-network-dev:
+    driver: bridge
+
+# ============================================
+# Volumes
+# ============================================
+volumes:
+  postgres_data_dev:
+    driver: local
